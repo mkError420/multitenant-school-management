@@ -1,4 +1,3 @@
-// authStore.js
-// Re-exports useAuthStore from the App context bridge.
-// All child pages call:  import { useAuthStore } from '../../services/authStore';
-export { useAuthStore } from '../App';
+// All pages call:  import { useAuthStore } from '../../services/authStore';
+// This re-exports from the single authoritative context module.
+export { useAuthStore } from '../context/AuthContext';
