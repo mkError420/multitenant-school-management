@@ -42,7 +42,12 @@ const SCHOOL_MENU = [
 ];
 
 const SUPER_MENU = [
-  { group: 'SaaS Management', items: [{ id: 'superadmin', icon: '⚡', label: 'SaaS Platform Overview' }] },
+  {
+    group: 'SaaS Administration',
+    items: [
+      { id: 'superadmin', icon: '⚡', label: 'SaaS Platform Console' },
+    ]
+  }
 ];
 
 // ─────────────────────────────────────────────
@@ -68,7 +73,7 @@ export default function App() {
   const menu = role === 'super_admin' ? SUPER_MENU : SCHOOL_MENU;
 
   const renderPage = () => {
-    if (role === 'super_admin') return <SuperAdminDashboard />;
+    if (role === 'super_admin' || activeTab === 'superadmin') return <SuperAdminDashboard />;
     switch (activeTab) {
       case 'dashboard':  return <DashboardOverview />;
       case 'academic':   return <AcademicManagement />;
@@ -85,7 +90,22 @@ export default function App() {
   };
 
   // Shared context value consumed by all child pages via useAuthStore()
-  const ctxValue = { tenant, setTenant, setActiveTab, selectedSession: '2026' };
+  const ctxValue = {
+    tenant,
+    setTenant: (t) => {
+      setTenant(t);
+      if (role === 'super_admin') {
+        setRole('school_admin');
+        setActiveTab('dashboard');
+      }
+    },
+    role,
+    setRole,
+    activeTab,
+    setActiveTab,
+    selectedSession: '2026',
+    availableTenants: DEMO_TENANTS
+  };
 
   return (
     <AuthCtx.Provider value={ctxValue}>
@@ -109,28 +129,32 @@ export default function App() {
             <div className="flex items-center gap-2.5">
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-xs shadow"
-                style={{ backgroundColor: '#059669' }}
+                style={{ backgroundColor: role === 'super_admin' ? '#4f46e5' : '#059669' }}
               >
-                {tenant.short_name.slice(0, 2)}
+                {role === 'super_admin' ? 'SA' : tenant.short_name.slice(0, 2)}
               </div>
               <div className="hidden sm:block leading-tight">
                 <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate max-w-[220px]">
-                  {tenant.name}
+                  {role === 'super_admin' ? 'SaaS Super Administrator' : tenant.name}
                 </p>
-                <p className="text-[10px] text-slate-400 font-mono">{tenant.domain}</p>
+                <p className="text-[10px] text-slate-400 font-mono">
+                  {role === 'super_admin' ? 'platform.edumanage.bd' : tenant.domain}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Right controls */}
           <div className="flex items-center gap-2 shrink-0">
-            <select
-              value={tenant.id}
-              onChange={(e) => setTenant(DEMO_TENANTS.find(t => t.id === Number(e.target.value)))}
-              className="hidden lg:block text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200"
-            >
-              {DEMO_TENANTS.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
+            {role !== 'super_admin' && (
+              <select
+                value={tenant.id}
+                onChange={(e) => setTenant(DEMO_TENANTS.find(t => t.id === Number(e.target.value)))}
+                className="hidden lg:block text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200"
+              >
+                {DEMO_TENANTS.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            )}
 
             <select
               value={role}
