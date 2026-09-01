@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment & OS
+.env
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build artifacts
+frontend/dist/

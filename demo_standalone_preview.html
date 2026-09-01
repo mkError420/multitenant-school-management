@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduManageBD - Multi-Tenant Bangladeshi School & College Management SaaS</title>
+  <!-- Tailwind CSS & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- React & Babel for direct in-browser compilation -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Hind Siliguri', 'sans-serif'],
+            bengali: ['Hind Siliguri', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+  <div id="app-root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const demoTenants = [
+      { id: 1, name: 'Dhaka Residential Model College', short_name: 'DRMC', eiin: '107985', subdomain: 'drmc', sms_balance: 4500, students: 3200, plan: 'Enterprise College' },
+      { id: 2, name: 'Ideal School and College', short_name: 'ISC', eiin: '108277', subdomain: 'idealschool', sms_balance: 3200, students: 5400, plan: 'Enterprise College' },
+      { id: 3, name: 'Chittagong Collegiate School', short_name: 'CCS', eiin: '104044', subdomain: 'collegiate', sms_balance: 1200, students: 1800, plan: 'Standard High' }
+    ];
+
+    function App() {
+      const [tenant, setTenant] = useState(demoTenants[0]);
+      const [role, setRole] = useState('school_admin'); // 'super_admin' | 'school_admin'
+      const [tab, setTab] = useState('dashboard');
+      const [darkMode, setDarkMode] = useState(false);
+      const [selectedStudentForID, setSelectedStudentForID] = useState(null);
+      const [showAdmitCard, setShowAdmitCard] = useState(false);
+
+      const toggleDark = () => {
+        if (!darkMode) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+        setDarkMode(!darkMode);
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          {/* Top Navbar */}
+          <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
+                {tenant.short_name}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">{tenant.name}</h1>
+                  <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">
+                    EIIN: {tenant.eiin}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-mono">{tenant.subdomain}.edumanage.bd • Session 2026</p>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-3">
+              {/* Tenant Switcher */}
+              <select
+                value={tenant.id}
+                onChange={(e) => setTenant(demoTenants.find(t => t.id === Number(e.target.value)))}
+                className="bg-slate-100 dark:bg-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+              >
+                {demoTenants.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+
+              {/* Role Switcher */}
+              <select
+                value={role}
+                onChange={(e) => {
+                  setRole(e.target.value);
+                  setTab(e.target.value === 'super_admin' ? 'superadmin_tenants' : 'dashboard');
+                }}
+                className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-900"
+              >
+                <option value="school_admin">👑 Principal / School Admin</option>
+                <option value="super_admin">⚡ Super Admin (SaaS Platform)</option>
+              </select>
+
+              {/* SMS Balance */}
+              <div className="hidden sm:flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 px-3 py-1.5 rounded-full">
+                <span>SMS: {tenant.sms_balance}</span>
+              </div>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleDark}
+                className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
+              >
+                {darkMode ? '☀️ Light' : '🌙 Dark'}
+              </button>
+            </div>
+          </header>
+
+          {/* Main Layout */}
+          <div className="flex flex-1">
+            {/* Sidebar */}
+            <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4 space-y-1 text-xs font-semibold">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Navigation</div>
+              {role === 'super_admin' ? (
+                <>
+                  <button onClick={() => setTab('superadmin_tenants')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'superadmin_tenants' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    🏢 All Schools & Colleges
+                  </button>
+                  <button onClick={() => setTab('superadmin_analytics')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'superadmin_analytics' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    📊 SaaS Platform Analytics
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setTab('dashboard')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'dashboard' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    📊 Dashboard Overview
+                  </button>
+                  <button onClick={() => setTab('students')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'students' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    👥 Students & ID Cards
+                  </button>
+                  <button onClick={() => setTab('attendance')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'attendance' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    📅 Daily Attendance & SMS
+                  </button>
+                  <button onClick={() => setTab('exams')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'exams' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    🎓 GPA 5.0 Tabulation Sheet
+                  </button>
+                  <button onClick={() => setTab('fees')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'fees' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    💳 Fees POS & bKash Collection
+                  </button>
+                  <button onClick={() => setTab('routine')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'routine' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    ⏰ Class Routine Matrix
+                  </button>
+                  <button onClick={() => setTab('notices')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'notices' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    📢 Notices & Bulk SMS
+                  </button>
+                  <button onClick={() => setTab('payroll')} className={`w-full text-left p-2.5 rounded-xl ${tab === 'payroll' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    💰 Payroll & Salary Slips
+                  </button>
+                </>
+              )}
+            </aside>
+
+            {/* Page Content */}
+            <main className="flex-1 p-6 max-w-6xl mx-auto space-y-6">
+              {tab === 'dashboard' && (
+                <div className="space-y-6">
+                  {/* Banner */}
+                  <div className="bg-gradient-to-r from-emerald-800 to-teal-900 text-white rounded-3xl p-6 shadow-xl">
+                    <h2 className="text-2xl font-extrabold">{tenant.name}</h2>
+                    <p className="text-emerald-100 text-xs mt-1">Academic Session 2026 Active • NCTB Bangladesh Curriculum Standard</p>
+                  </div>
+
+                  {/* KPI Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-left">
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">Total Students</p>
+                      <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">1,250</h3>
+                      <p className="text-[10px] text-emerald-600 font-bold mt-1">Class 6 to Class 12</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">Attendance Today</p>
+                      <h3 className="text-2xl font-black text-emerald-600 mt-1">94.8%</h3>
+                      <p className="text-[10px] text-slate-400 mt-1">1,185 Present • 65 Absent</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">Fee Collected (March)</p>
+                      <h3 className="text-2xl font-black text-indigo-600 mt-1">৳ 485,000</h3>
+                      <p className="text-[10px] text-rose-500 font-bold mt-1">Pending Due: ৳ 65,000</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">SMS Credits</p>
+                      <h3 className="text-2xl font-black text-purple-600 mt-1">{tenant.sms_balance}</h3>
+                      <p className="text-[10px] text-slate-400 mt-1">GreenwebBD Live</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tabulation Sheet View */}
+              {tab === 'exams' && (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4">
+                  <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                      <h3 className="text-lg font-extrabold">Official Tabulation Sheet (NCTB GPA 5.0 Scale)</h3>
+                      <p className="text-xs text-slate-500">Class 10 (Science) • Half-Yearly Exam 2026</p>
+                    </div>
+                    <button onClick={() => window.print()} className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow">
+                      Print Tabulation
+                    </button>
+                  </div>
+
+                  <table className="w-full text-xs text-center border-collapse border border-slate-300">
+                    <thead>
+                      <tr className="bg-slate-100 text-slate-800 font-bold">
+                        <th className="border p-2">Roll</th>
+                        <th className="border p-2 text-left">Student Name</th>
+                        <th className="border p-2">Bangla (100)</th>
+                        <th className="border p-2">English (100)</th>
+                        <th className="border p-2">Math (100)</th>
+                        <th className="border p-2">Physics (100)</th>
+                        <th className="border p-2 bg-amber-50">Higher Math [4th]</th>
+                        <th className="border p-2 bg-emerald-50">Final GPA</th>
+                        <th className="border p-2 bg-emerald-50">Grade</th>
+                        <th className="border p-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="font-semibold">
+                        <td className="border p-2 font-bold">01</td>
+                        <td className="border p-2 text-left font-bold">Tanvir Hasan</td>
+                        <td className="border p-2">88 (A+)</td>
+                        <td className="border p-2">85 (A+)</td>
+                        <td className="border p-2">92 (A+)</td>
+                        <td className="border p-2">91 (A+)</td>
+                        <td className="border p-2 bg-amber-50">92 (+3.00 Bonus)</td>
+                        <td className="border p-2 bg-emerald-50 font-black text-emerald-700 text-sm">5.00</td>
+                        <td className="border p-2 bg-emerald-50 font-bold text-emerald-700">A+ (Golden)</td>
+                        <td className="border p-2"><span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">PASSED</span></td>
+                      </tr>
+                      <tr className="font-semibold">
+                        <td className="border p-2 font-bold">02</td>
+                        <td className="border p-2 text-left font-bold">Sadia Afrin</td>
+                        <td className="border p-2">82 (A+)</td>
+                        <td className="border p-2">76 (A)</td>
+                        <td className="border p-2">78 (A)</td>
+                        <td className="border p-2">79 (A)</td>
+                        <td className="border p-2 bg-amber-50">88 (+3.00 Bonus)</td>
+                        <td className="border p-2 bg-emerald-50 font-black text-emerald-700 text-sm">5.00</td>
+                        <td className="border p-2 bg-emerald-50 font-bold text-emerald-700">A+</td>
+                        <td className="border p-2"><span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">PASSED</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('app-root')).render(<App />);
+  </script>
+</body>
+</html>

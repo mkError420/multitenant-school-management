@@ -1,0 +1,23 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Route API requests to the PHP API Gateway
+    RewriteCond %{REQUEST_URI} ^/api/ [NC]
+    RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+    # If static file exists, serve it
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Route all other URLs to index.html (SPA Fallback)
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# Security Headers & MIME types
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Tenant-ID, X-Tenant-Subdomain"
+</IfModule>

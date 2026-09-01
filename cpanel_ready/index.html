@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mane School & College - Multi-Tenant Education SaaS (maneschool.site.je)</title>
+  
+  <!-- Tailwind CSS & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- React 18 & Babel for standalone compilation on shared hosting -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Hind Siliguri', 'sans-serif'],
+            bengali: ['Hind Siliguri', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; font-size: 12pt; }
+      .print-only { display: block !important; }
+      @page { margin: 10mm; }
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const demoTenants = [
+      {
+        id: 1,
+        name: 'Mane School and College',
+        short_name: 'MANE',
+        eiin: '107985',
+        subdomain: 'maneschool',
+        domain: 'maneschool.site.je',
+        theme_color: '#059669',
+        sms_balance: 4500,
+        students_count: 1250,
+        plan_name: 'Enterprise College'
+      },
+      {
+        id: 2,
+        name: 'Dhaka Residential Model College',
+        short_name: 'DRMC',
+        eiin: '108277',
+        subdomain: 'drmc',
+        domain: 'drmc.edu.bd',
+        theme_color: '#2563eb',
+        sms_balance: 3200,
+        students_count: 3200,
+        plan_name: 'Enterprise College'
+      },
+      {
+        id: 3,
+        name: 'Ideal School and College',
+        short_name: 'ISC',
+        eiin: '104044',
+        subdomain: 'idealschool',
+        domain: 'idealschool.edu.bd',
+        theme_color: '#7c3aed',
+        sms_balance: 1200,
+        students_count: 5400,
+        plan_name: 'Enterprise College'
+      }
+    ];
+
+    function App() {
+      const [tenant, setTenant] = useState(demoTenants[0]);
+      const [role, setRole] = useState('school_admin'); // 'super_admin' | 'school_admin' | 'teacher' | 'student' | 'accountant'
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [darkMode, setDarkMode] = useState(false);
+      const [selectedSession, setSelectedSession] = useState('2026');
+
+      // Modals
+      const [selectedStudentForID, setSelectedStudentForID] = useState(null);
+      const [isAdmitCardOpen, setIsAdmitCardOpen] = useState(false);
+      const [selectedInvoiceForReceipt, setSelectedInvoiceForReceipt] = useState(null);
+      const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
+      const [activeInvoice, setActiveInvoice] = useState(null);
+      const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+      const [isAbsentSMSModalOpen, setIsAbsentSMSModalOpen] = useState(false);
+      const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
+
+      // Student Data
+      const [students, setStudents] = useState([
+        { id: 1, admission_no: 'ADM-2026-1001', roll_no: 1, name_en: 'Tanvir Hasan', name_bn: 'তানভীর হাসান', class_name: 'Class 10 (SSC)', section_name: 'Padma (Morning)', group_name: 'Science', gender: 'Male', blood_group: 'O+', father_name: 'Md. Kamrul Hasan', father_phone: '+8801711888001', emergency_contact: '+8801711888001', present_address: 'House 24, Road 5, Dhanmondi, Dhaka', photo_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', status: 'active', fee_status: 'paid', total_due: 0.00 },
+        { id: 2, admission_no: 'ADM-2026-1002', roll_no: 2, name_en: 'Sadia Afrin', name_bn: 'সাদিয়া আফরিন', class_name: 'Class 10 (SSC)', section_name: 'Padma (Morning)', group_name: 'Science', gender: 'Female', blood_group: 'A+', father_name: 'Engr. Mahbubur Rahman', father_phone: '+8801711888002', emergency_contact: '+8801711888002', present_address: 'Flat B-3, Green Road, Dhaka', photo_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', status: 'active', fee_status: 'paid', total_due: 0.00 },
+        { id: 3, admission_no: 'ADM-2026-1003', roll_no: 3, name_en: 'Arafat Rahman', name_bn: 'আরাফাত রহমান', class_name: 'Class 10 (SSC)', section_name: 'Padma (Morning)', group_name: 'Science', gender: 'Male', blood_group: 'B+', father_name: 'Dr. Aminul Islam', father_phone: '+8801711888003', emergency_contact: '+8801711888003', present_address: 'Sector 4, Uttara, Dhaka', photo_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', status: 'active', fee_status: 'unpaid', total_due: 3100.00 },
+        { id: 4, admission_no: 'ADM-2026-1004', roll_no: 4, name_en: 'Farzana Akter', name_bn: 'ফারজানা আক্তার', class_name: 'Class 10 (SSC)', section_name: 'Padma (Morning)', group_name: 'Science', gender: 'Female', blood_group: 'AB+', father_name: 'Jahangir Alam', father_phone: '+8801711888004', emergency_contact: '+8801711888004', present_address: 'Lalmatia Block D, Dhaka', photo_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&auto=format&fit=crop&q=80', status: 'active', fee_status: 'partially_paid', total_due: 1700.00 }
+      ]);
+
+      // Invoices
+      const [invoices, setInvoices] = useState([
+        { id: 1, invoice_no: 'INV-2026-03-1001', student_id: 1, student_name: 'Tanvir Hasan', roll_no: 1, class_name: 'Class 10 (SSC)', title: 'Tuition & Lab Fee - March 2026', total_amount: 3100.00, paid_amount: 3100.00, due_amount: 0.00, status: 'paid', payment_method: 'bKash (Trx: BKASH9A87X21)', due_date: '2026-03-10', paid_at: '05 Mar 2026' },
+        { id: 2, invoice_no: 'INV-2026-03-1002', student_id: 2, student_name: 'Sadia Afrin', roll_no: 2, class_name: 'Class 10 (SSC)', title: 'Tuition & Lab Fee - March 2026', total_amount: 2600.00, paid_amount: 2600.00, due_amount: 0.00, status: 'paid', payment_method: 'Cash (Slip #502)', due_date: '2026-03-10', paid_at: '06 Mar 2026' },
+        { id: 3, invoice_no: 'INV-2026-03-1003', student_id: 3, student_name: 'Arafat Rahman', roll_no: 3, class_name: 'Class 10 (SSC)', title: 'Tuition & Lab Fee - March 2026', total_amount: 3100.00, paid_amount: 0.00, due_amount: 3100.00, status: 'unpaid', payment_method: null, due_date: '2026-03-10', paid_at: null },
+        { id: 4, invoice_no: 'INV-2026-03-1004', student_id: 4, student_name: 'Farzana Akter', roll_no: 4, class_name: 'Class 10 (SSC)', title: 'Tuition & Lab Fee - March 2026', total_amount: 3200.00, paid_amount: 1500.00, due_amount: 1700.00, status: 'partially_paid', payment_method: 'Nagad (Trx: NAGAD88B129)', due_date: '2026-03-10', paid_at: '08 Mar 2026' }
+      ]);
+
+      // Attendance
+      const [attendanceList, setAttendanceList] = useState([
+        { id: 1, roll_no: 1, name: 'Tanvir Hasan', phone: '+8801711888001', status: 'present', in_time: '07:42 AM' },
+        { id: 2, roll_no: 2, name: 'Sadia Afrin', phone: '+8801711888002', status: 'present', in_time: '07:38 AM' },
+        { id: 3, roll_no: 3, name: 'Arafat Rahman', phone: '+8801711888003', status: 'absent', in_time: '' },
+        { id: 4, roll_no: 4, name: 'Farzana Akter', phone: '+8801711888004', status: 'present', in_time: '07:45 AM' }
+      ]);
+
+      // Notices
+      const [notices, setNotices] = useState([
+        { id: 1, title: 'Half-Yearly Examination 2026 Routine & Admit Card Collection', content: 'The Half-Yearly Examination 2026 will start on 10th June 2026. All students must collect their Admit Cards by 5th June after clearing tuition dues.', target_role: 'all', author: 'Principal Office', date: '01 Mar 2026' },
+        { id: 2, title: 'Shaheed Dibash & International Mother Language Day Celebration', content: 'Special cultural program and discussion meeting will be held at college auditorium at 9:00 AM on 21st February.', target_role: 'all', author: 'College Authority', date: '18 Feb 2026' }
+      ]);
+
+      // Bulk SMS State
+      const [smsMessage, setSmsMessage] = useState('');
+      const isBangla = /[\u0980-\u09FF]/.test(smsMessage);
+      const charLimit = isBangla ? 70 : 160;
+      const smsParts = smsMessage.length === 0 ? 1 : Math.ceil(smsMessage.length / charLimit);
+
+      const toggleDark = () => {
+        if (!darkMode) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+        setDarkMode(!darkMode);
+      };
+
+      const handleCollectPaymentSubmit = (e) => {
+        e.preventDefault();
+        const amt = parseFloat(e.target.amount.value);
+        const method = e.target.payment_method.value;
+        setInvoices(invoices.map(inv => {
+          if (inv.id === activeInvoice.id) {
+            const newPaid = inv.paid_amount + amt;
+            const newDue = Math.max(0, inv.total_amount - newPaid);
+            return {
+              ...inv,
+              paid_amount: newPaid,
+              due_amount: newDue,
+              status: newDue === 0 ? 'paid' : 'partially_paid',
+              payment_method: `${method.toUpperCase()} (Live POS)`,
+              paid_at: 'Just now'
+            };
+          }
+          return inv;
+        }));
+        setIsCollectModalOpen(false);
+        alert(`✅ Payment of ৳${amt} successfully collected via ${method.toUpperCase()}!`);
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          {/* Top Navbar */}
+          <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm shadow-md">
+                {tenant.short_name}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white leading-tight">
+                    {tenant.name}
+                  </h1>
+                  <span className="hidden sm:inline-block text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">
+                    EIIN: {tenant.eiin}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-mono">
+                  {tenant.domain} • Session {selectedSession}
+                </p>
+              </div>
+            </div>
+
+            {/* Top Right Controls */}
+            <div className="flex items-center gap-2.5">
+              {/* Institution Switcher */}
+              <select
+                value={tenant.id}
+                onChange={(e) => setTenant(demoTenants.find(t => t.id === Number(e.target.value)))}
+                className="hidden md:block bg-slate-100 dark:bg-slate-800 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200"
+              >
+                {demoTenants.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+
+              {/* Role Switcher */}
+              <select
+                value={role}
+                onChange={(e) => {
+                  setRole(e.target.value);
+                  setActiveTab(e.target.value === 'super_admin' ? 'superadmin_tenants' : 'dashboard');
+                }}
+                className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-900"
+              >
+                <option value="school_admin">👑 Principal / School Admin</option>
+                <option value="super_admin">⚡ Super Admin (SaaS Portal)</option>
+                <option value="teacher">👨‍🏫 Teacher Portal</option>
+                <option value="accountant">💰 Accountant (POS)</option>
+                <option value="student">🎓 Student (Roll 1)</option>
+              </select>
+
+              {/* SMS Balance */}
+              <div className="hidden lg:flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 px-3 py-1.5 rounded-full">
+                <span>SMS: {tenant.sms_balance}</span>
+              </div>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleDark}
+                className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                title="Toggle Theme"
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+            </div>
+          </header>
+
+          {/* Main Workspace Layout */}
+          <div className="flex flex-1">
+            {/* Sidebar */}
+            <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4 space-y-1 text-xs font-semibold shrink-0">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Navigation Menu</div>
+              {role === 'super_admin' ? (
+                <>
+                  <button onClick={() => setActiveTab('superadmin_tenants')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'superadmin_tenants' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    🏢 All Schools & Colleges (38)
+                  </button>
+                  <button onClick={() => setActiveTab('superadmin_analytics')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'superadmin_analytics' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    📊 SaaS Platform Analytics
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setActiveTab('dashboard')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    📊 Dashboard Overview
+                  </button>
+                  <button onClick={() => setActiveTab('students')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'students' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    👥 Students & ID Card Generator
+                  </button>
+                  <button onClick={() => setActiveTab('attendance')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'attendance' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    📅 Attendance & Absent Alert SMS
+                  </button>
+                  <button onClick={() => setActiveTab('exams')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'exams' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    🎓 NCTB GPA 5.0 Tabulation Sheet
+                  </button>
+                  <button onClick={() => setActiveTab('fees')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'fees' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    💳 Fees POS & 3-Part Receipts
+                  </button>
+                  <button onClick={() => setActiveTab('routine')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'routine' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    ⏰ Weekly Class Routine Matrix
+                  </button>
+                  <button onClick={() => setActiveTab('notices')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'notices' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    📢 Notices & Bulk SMS Portal
+                  </button>
+                  <button onClick={() => setActiveTab('payroll')} className={`w-full text-left p-2.5 rounded-xl transition-all ${activeTab === 'payroll' ? 'bg-emerald-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    💰 Payroll & Salary Slips
+                  </button>
+                </>
+              )}
+            </aside>
+
+            {/* Dynamic Viewport Content */}
+            <main className="flex-1 p-6 max-w-7xl mx-auto space-y-6">
+              
+              {/* TAB: DASHBOARD */}
+              {activeTab === 'dashboard' && (
+                <div className="space-y-6">
+                  {/* Banner */}
+                  <div className="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl border border-emerald-700/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                      <span className="text-[10px] bg-white/10 px-3 py-1 rounded-full uppercase font-bold tracking-wider text-emerald-200">
+                        Live on maneschool.site.je
+                      </span>
+                      <h2 className="text-2xl lg:text-3xl font-extrabold mt-1">{tenant.name}</h2>
+                      <p className="text-xs text-emerald-100 mt-1">Academic Session 2026 Active • Morning & Day Shifts • NCTB Curriculum Standard</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setIsAddStudentOpen(true)} className="px-4 py-2 bg-white text-emerald-900 font-extrabold text-xs rounded-xl shadow">
+                        + New Admission
+                      </button>
+                      <button onClick={() => setActiveTab('attendance')} className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow hover:bg-emerald-700">
+                        Take Attendance
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* KPI Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">Total Enrolled</p>
+                      <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">1,250 Students</h3>
+                      <p className="text-xs text-emerald-600 font-bold mt-1">Class 6 to Class 12 (HSC)</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">Attendance Today</p>
+                      <h3 className="text-2xl font-black text-emerald-600 mt-1">94.8%</h3>
+                      <p className="text-xs text-slate-400 mt-1">1,185 Present • 65 Absent</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">Fee Collected (March)</p>
+                      <h3 className="text-2xl font-black text-indigo-600 mt-1">৳ 485,000</h3>
+                      <p className="text-xs text-rose-500 font-bold mt-1">Due Balance: ৳ 65,000</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <p className="text-[10px] uppercase font-bold text-slate-400">SMS Gateway Credits</p>
+                      <h3 className="text-2xl font-black text-purple-600 mt-1">{tenant.sms_balance}</h3>
+                      <p className="text-xs text-slate-400 mt-1">GreenwebBD Masking Active</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: STUDENTS */}
+              {activeTab === 'students' && (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden p-6 space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                      <h3 className="text-lg font-extrabold">Student Admission Directory & ID Card Registry</h3>
+                      <p className="text-xs text-slate-500">Manage student profiles, rolls, guardians, and PVC/A4 ID card generation</p>
+                    </div>
+                    <button onClick={() => setIsAddStudentOpen(true)} className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow hover:bg-emerald-700">
+                      + New Student Admission
+                    </button>
+                  </div>
+
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                      <tr>
+                        <th className="p-3">Roll</th>
+                        <th className="p-3">Student Name</th>
+                        <th className="p-3">Class & Shift</th>
+                        <th className="p-3">Guardian & Phone</th>
+                        <th className="p-3">Blood</th>
+                        <th className="p-3">Fee Status</th>
+                        <th className="p-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                      {students.map(s => (
+                        <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="p-3 font-extrabold text-sm">{s.roll_no < 10 ? `0${s.roll_no}` : s.roll_no}</td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <img src={s.photo_url} className="w-8 h-8 rounded-lg object-cover ring-1 ring-emerald-500" />
+                              <div>
+                                <p className="font-bold">{s.name_en}</p>
+                                <p className="text-[10px] text-emerald-600 font-bengali">{s.name_bn}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">{s.class_name} • <span className="text-slate-400">{s.section_name}</span></td>
+                          <td className="p-3">{s.father_name} • <span className="font-mono text-emerald-600">{s.father_phone}</span></td>
+                          <td className="p-3"><span className="text-rose-600 font-bold bg-rose-50 dark:bg-rose-950 px-1.5 py-0.5 rounded">{s.blood_group}</span></td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s.fee_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                              {s.fee_status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">
+                            <button onClick={() => setSelectedStudentForID(s)} className="px-3 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold rounded-lg hover:bg-emerald-100">
+                              🪪 ID Card
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* TAB: ATTENDANCE */}
+              {activeTab === 'attendance' && (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                      <h3 className="text-lg font-extrabold">Daily Roll Call & Absentee SMS Alert</h3>
+                      <p className="text-xs text-slate-500">Live attendance sheet with automated Bangla SMS to parents</p>
+                    </div>
+                    <button onClick={() => setIsAbsentSMSModalOpen(true)} className="px-4 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow animate-pulse">
+                      Send Absent Alert SMS (1 Absent)
+                    </button>
+                  </div>
+
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 font-bold uppercase text-[10px] border-b">
+                      <tr>
+                        <th className="p-3">Roll</th>
+                        <th className="p-3">Student</th>
+                        <th className="p-3">Guardian Phone</th>
+                        <th className="p-3">In-Time</th>
+                        <th className="p-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {attendanceList.map(a => (
+                        <tr key={a.id} className={a.status === 'absent' ? 'bg-rose-50/40 dark:bg-rose-950/20' : ''}>
+                          <td className="p-3 font-bold">{a.roll_no}</td>
+                          <td className="p-3 font-bold">{a.name}</td>
+                          <td className="p-3 font-mono">{a.phone}</td>
+                          <td className="p-3 font-mono">{a.in_time || '--'}</td>
+                          <td className="p-3">
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${a.status === 'present' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
+                              {a.status.toUpperCase()}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* TAB: EXAMS & TABULATION */}
+              {activeTab === 'exams' && (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                      <h3 className="text-lg font-extrabold">Bangladesh NCTB GPA 5.0 Tabulation Sheet</h3>
+                      <p className="text-xs text-slate-500">Half-Yearly Examination 2026 • Class 10 (Science) • 4th Subject Bonus Applied</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setIsAdmitCardOpen(true)} className="px-3 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow">
+                        🎫 Admit Card
+                      </button>
+                      <button onClick={() => window.print()} className="px-3 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow">
+                        🖨️ Print Tabulation
+                      </button>
+                    </div>
+                  </div>
+
+                  <table className="w-full text-xs text-center border-collapse border border-slate-300">
+                    <thead>
+                      <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold">
+                        <th className="border p-2">Roll</th>
+                        <th className="border p-2 text-left">Student Name</th>
+                        <th className="border p-2">Bangla (100)</th>
+                        <th className="border p-2">English (100)</th>
+                        <th className="border p-2">Math (100)</th>
+                        <th className="border p-2">Physics (100)</th>
+                        <th className="border p-2 bg-amber-50 dark:bg-amber-950/40">Higher Math [4th]</th>
+                        <th className="border p-2 bg-emerald-50 dark:bg-emerald-950/40">Total</th>
+                        <th className="border p-2 bg-emerald-50 dark:bg-emerald-950/40">GPA 5.0</th>
+                        <th className="border p-2 bg-emerald-50 dark:bg-emerald-950/40">Grade</th>
+                        <th className="border p-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y font-semibold">
+                      <tr>
+                        <td className="border p-2 font-bold">01</td>
+                        <td className="border p-2 text-left font-bold">Tanvir Hasan</td>
+                        <td className="border p-2">88 (A+)</td>
+                        <td className="border p-2">85 (A+)</td>
+                        <td className="border p-2">92 (A+)</td>
+                        <td className="border p-2">91 (A+)</td>
+                        <td className="border p-2 bg-amber-50 dark:bg-amber-950/30">92 (+3.00 Bonus)</td>
+                        <td className="border p-2 font-bold">534</td>
+                        <td className="border p-2 font-black text-emerald-600 text-sm">5.00</td>
+                        <td className="border p-2 font-bold text-emerald-600">A+ (Golden)</td>
+                        <td className="border p-2"><span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">PASSED</span></td>
+                      </tr>
+                      <tr>
+                        <td className="border p-2 font-bold">02</td>
+                        <td className="border p-2 text-left font-bold">Sadia Afrin</td>
+                        <td className="border p-2">82 (A+)</td>
+                        <td className="border p-2">76 (A)</td>
+                        <td className="border p-2">78 (A)</td>
+                        <td className="border p-2">84 (A+)</td>
+                        <td className="border p-2 bg-amber-50 dark:bg-amber-950/30">88 (+3.00 Bonus)</td>
+                        <td className="border p-2 font-bold">487</td>
+                        <td className="border p-2 font-black text-emerald-600 text-sm">5.00</td>
+                        <td className="border p-2 font-bold text-emerald-600">A+</td>
+                        <td className="border p-2"><span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">PASSED</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* TAB: FEES & POS */}
+              {activeTab === 'fees' && (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                      <h3 className="text-lg font-extrabold">Fees Collection POS & Money Receipt Counter</h3>
+                      <p className="text-xs text-slate-500">Collect tuition, session charge, and exam fees with bKash/Nagad/Cash vouchers</p>
+                    </div>
+                  </div>
+
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 font-bold uppercase text-[10px] border-b">
+                      <tr>
+                        <th className="p-3">Invoice #</th>
+                        <th className="p-3">Student</th>
+                        <th className="p-3">Total Amount</th>
+                        <th className="p-3">Paid</th>
+                        <th className="p-3">Due</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                      {invoices.map(inv => (
+                        <tr key={inv.id}>
+                          <td className="p-3 font-mono font-bold">{inv.invoice_no}</td>
+                          <td className="p-3 font-bold">{inv.student_name} (Roll {inv.roll_no})</td>
+                          <td className="p-3 font-bold">৳{inv.total_amount}</td>
+                          <td className="p-3 text-emerald-600 font-bold">৳{inv.paid_amount}</td>
+                          <td className="p-3 text-rose-600 font-bold">৳{inv.due_amount}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${inv.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                              {inv.status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">
+                            {inv.due_amount > 0 ? (
+                              <button
+                                onClick={() => { setActiveInvoice(inv); setIsCollectModalOpen(true); }}
+                                className="px-3 py-1 bg-emerald-600 text-white font-bold text-xs rounded-lg shadow hover:bg-emerald-700"
+                              >
+                                Collect Fee
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => setSelectedInvoiceForReceipt(inv)}
+                                className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-lg hover:bg-slate-200"
+                              >
+                                🖨️ 3-Part Voucher
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* TAB: NOTICES & SMS */}
+              {activeTab === 'notices' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Bulk SMS Portal */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+                    <h3 className="text-base font-extrabold">📱 Bulk SMS Portal (GreenwebBD Gateway)</h3>
+                    <div className="space-y-3 text-xs">
+                      <div>
+                        <label className="font-bold block mb-1">Target Group</label>
+                        <select className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                          <option>All School Guardians (~1,250 Parents)</option>
+                          <option>Class 10 SSC Candidate Guardians</option>
+                          <option>All Teachers & Faculty Members</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="font-bold block mb-1">Message Text (Bangla / English)</label>
+                        <textarea
+                          rows={3}
+                          value={smsMessage}
+                          onChange={(e) => setSmsMessage(e.target.value)}
+                          placeholder="Type SMS text..."
+                          className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                        />
+                        <div className="flex justify-between text-[11px] text-slate-500 mt-1">
+                          <span>Chars: <strong>{smsMessage.length}</strong> / {charLimit}</span>
+                          <span>Parts: <strong>{smsParts} SMS</strong></span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => { alert('Bulk SMS broadcast dispatched successfully!'); setSmsMessage(''); }}
+                        className="w-full py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow hover:bg-emerald-700"
+                      >
+                        Send Bulk Broadcast SMS
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Notice List */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div className="flex justify-between items-center pb-2 border-b">
+                      <h3 className="text-base font-extrabold">📢 Circular Board</h3>
+                      <button onClick={() => setIsNoticeModalOpen(true)} className="px-3 py-1 bg-emerald-600 text-white font-bold text-xs rounded-lg">
+                        + Post Circular
+                      </button>
+                    </div>
+                    <div className="space-y-2 text-xs">
+                      {notices.map(n => (
+                        <div key={n.id} className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                          <span className="text-[10px] font-bold text-emerald-600 uppercase">{n.date}</span>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-white mt-0.5">{n.title}</h4>
+                          <p className="text-slate-600 dark:text-slate-300 mt-1">{n.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: ROUTINE */}
+              {activeTab === 'routine' && (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+                  <h3 className="text-lg font-extrabold">Class 10 (Science) Weekly Routine Matrix</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    {['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'].map((day, i) => (
+                      <div key={i} className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+                        <h4 className="font-bold text-emerald-700 dark:text-emerald-400 uppercase">{day}</h4>
+                        <div className="space-y-1 text-[11px]">
+                          <p><strong>07:30 - 08:15 AM:</strong> Bangla 1st (Nusrat Jahan)</p>
+                          <p><strong>08:15 - 09:00 AM:</strong> General Math (Rafiqul Islam)</p>
+                          <p><strong>09:00 - 09:45 AM:</strong> Physics Lab (Dr. Faruq Ahmed)</p>
+                          <p><strong>10:00 - 10:45 AM:</strong> Chemistry (Anwar Hossain)</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: PAYROLL */}
+              {activeTab === 'payroll' && (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+                  <h3 className="text-lg font-extrabold">Faculty Payroll & Salary Slips (March 2026)</h3>
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-800 font-bold uppercase text-[10px] border-b">
+                      <tr>
+                        <th className="p-3">Staff Name</th>
+                        <th className="p-3">Designation</th>
+                        <th className="p-3">Basic</th>
+                        <th className="p-3">Allowances</th>
+                        <th className="p-3">Net Salary</th>
+                        <th className="p-3 text-right">Slip</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y font-medium">
+                      <tr>
+                        <td className="p-3 font-bold">Prof. Kazi Faruq Ahmed</td>
+                        <td className="p-3">Principal</td>
+                        <td className="p-3">৳85,000</td>
+                        <td className="p-3 text-emerald-600">+৳30,000</td>
+                        <td className="p-3 font-bold text-sm">৳113,000</td>
+                        <td className="p-3 text-right"><button onClick={() => window.print()} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded font-bold">Print Slip</button></td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-bold">Mohammad Rafiqul Islam</td>
+                        <td className="p-3">Senior Math Teacher</td>
+                        <td className="p-3">৳52,000</td>
+                        <td className="p-3 text-emerald-600">+৳17,000</td>
+                        <td className="p-3 font-bold text-sm">৳68,000</td>
+                        <td className="p-3 text-right"><button onClick={() => window.print()} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded font-bold">Print Slip</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </main>
+          </div>
+
+          {/* PRINTABLE DUAL-SIDED ID CARD MODAL */}
+          {selectedStudentForID && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-xl w-full space-y-4">
+                <div className="no-print flex justify-between items-center pb-3 border-b">
+                  <h3 className="font-bold text-sm">🪪 Student ID Card (Print Ready)</h3>
+                  <div className="flex gap-2">
+                    <button onClick={() => window.print()} className="px-3 py-1 bg-emerald-600 text-white font-bold text-xs rounded-lg">Print</button>
+                    <button onClick={() => setSelectedStudentForID(null)} className="px-3 py-1 bg-slate-200 text-slate-800 font-bold text-xs rounded-lg">Close</button>
+                  </div>
+                </div>
+
+                <div className="flex justify-center gap-4">
+                  {/* FRONT */}
+                  <div className="w-56 h-80 bg-white text-slate-900 border-2 border-emerald-600 rounded-xl overflow-hidden text-center flex flex-col justify-between p-3 shadow-lg">
+                    <div className="bg-emerald-700 text-white py-1 rounded">
+                      <p className="font-bold text-[10px] uppercase">{tenant.name}</p>
+                      <p className="text-[8px]">Session 2026</p>
+                    </div>
+                    <div>
+                      <img src={selectedStudentForID.photo_url} className="w-16 h-16 rounded-full mx-auto object-cover ring-2 ring-emerald-500 mb-1" />
+                      <h4 className="font-bold text-xs">{selectedStudentForID.name_en}</h4>
+                      <p className="text-[10px] text-emerald-700 font-bengali">{selectedStudentForID.name_bn}</p>
+                      <p className="text-[9px] text-slate-500 mt-1">Roll: <strong>{selectedStudentForID.roll_no}</strong> • {selectedStudentForID.class_name}</p>
+                      <p className="text-[9px] text-rose-600 font-bold">Blood: {selectedStudentForID.blood_group}</p>
+                    </div>
+                    <div className="bg-emerald-800 text-white text-[8px] py-0.5 rounded font-mono font-bold">
+                      {selectedStudentForID.admission_no}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PRINTABLE 3-PART VOUCHER RECEIPT MODAL */}
+          {selectedInvoiceForReceipt && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+              <div className="bg-white text-slate-900 rounded-2xl p-6 max-w-2xl w-full space-y-4">
+                <div className="no-print flex justify-between items-center pb-3 border-b">
+                  <h3 className="font-bold text-sm">💳 3-Part Money Receipt Voucher</h3>
+                  <div className="flex gap-2">
+                    <button onClick={() => window.print()} className="px-3 py-1 bg-emerald-600 text-white font-bold text-xs rounded-lg">Print Voucher</button>
+                    <button onClick={() => setSelectedInvoiceForReceipt(null)} className="px-3 py-1 bg-slate-200 text-slate-800 font-bold text-xs rounded-lg">Close</button>
+                  </div>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  {['Student Copy', 'School Copy', 'Bank Copy'].map((copy, i) => (
+                    <div key={i} className="border border-slate-300 p-3 rounded-xl bg-slate-50">
+                      <div className="flex justify-between border-b pb-1">
+                        <span className="font-bold">{tenant.name}</span>
+                        <span className="font-bold text-emerald-700 uppercase">{copy}</span>
+                      </div>
+                      <div className="flex justify-between py-2">
+                        <span>Student: <strong>{selectedInvoiceForReceipt.student_name} (Roll {selectedInvoiceForReceipt.roll_no})</strong></span>
+                        <span className="font-bold text-sm">Paid: ৳{selectedInvoiceForReceipt.paid_amount}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 flex justify-between">
+                        <span>{selectedInvoiceForReceipt.invoice_no} • {selectedInvoiceForReceipt.payment_method}</span>
+                        <span>Authorized Signatory</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* COLLECT FEE MODAL */}
+          {isCollectModalOpen && activeInvoice && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full space-y-4 text-xs">
+                <h3 className="font-extrabold text-sm">💳 Collect Fee - {activeInvoice.student_name}</h3>
+                <form onSubmit={handleCollectPaymentSubmit} className="space-y-3">
+                  <div>
+                    <label className="font-bold block mb-1">Payment Channel</label>
+                    <select name="payment_method" className="w-full p-2 border rounded-xl bg-slate-50 dark:bg-slate-800">
+                      <option value="bkash">bKash Merchant Checkout</option>
+                      <option value="cash">Cash (Counter)</option>
+                      <option value="nagad">Nagad Payment</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Amount (৳)</label>
+                    <input name="amount" defaultValue={activeInvoice.due_amount} className="w-full p-2 border rounded-xl bg-slate-50 dark:bg-slate-800 font-bold" />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={() => setIsCollectModalOpen(false)} className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 rounded-xl font-bold">Cancel</button>
+                    <button type="submit" className="px-4 py-1.5 bg-emerald-600 text-white rounded-xl font-bold">Confirm & Print</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* ADMIT CARD MODAL */}
+          {isAdmitCardOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+              <div className="bg-white text-slate-900 rounded-2xl p-6 max-w-xl w-full space-y-4">
+                <div className="no-print flex justify-between items-center pb-2 border-b">
+                  <h3 className="font-bold text-sm">🎫 Examination Admit Card</h3>
+                  <div className="flex gap-2">
+                    <button onClick={() => window.print()} className="px-3 py-1 bg-emerald-600 text-white font-bold text-xs rounded-lg">Print</button>
+                    <button onClick={() => setIsAdmitCardOpen(false)} className="px-3 py-1 bg-slate-200 text-slate-800 font-bold text-xs rounded-lg">Close</button>
+                  </div>
+                </div>
+
+                <div className="border-2 border-slate-400 p-4 rounded-xl text-center space-y-2 text-xs">
+                  <h3 className="font-extrabold text-sm uppercase">{tenant.name}</h3>
+                  <p className="text-[10px] text-slate-500">Half-Yearly Examination 2026 • EIIN: {tenant.eiin}</p>
+                  <div className="bg-slate-100 p-2 rounded text-left flex justify-between">
+                    <div>
+                      <p>Name: <strong>Tanvir Hasan</strong></p>
+                      <p>Roll: <strong>01</strong> • Class: <strong>Class 10</strong></p>
+                    </div>
+                    <span className="font-mono text-[10px] text-slate-400">ADM-2026-1001</span>
+                  </div>
+                  <div className="pt-4 flex justify-between items-end text-[10px] text-slate-500">
+                    <span>Invigilator Seal</span>
+                    <span className="border-t border-slate-400 pt-1 font-bold text-slate-800">Principal Signature</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
