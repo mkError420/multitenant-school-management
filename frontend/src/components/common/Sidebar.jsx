@@ -1,60 +1,229 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuthStore } from '../../services/authStore';
-import {
-  LayoutDashboard,
-  Users,
-  CalendarCheck,
-  GraduationCap,
-  CreditCard,
-  Clock,
-  BellRing,
-  Wallet,
-  Settings,
-  Building,
-  BarChart3,
-  Contact2,
-  FileSpreadsheet,
-  X
-} from 'lucide-react';
+import { GraduationCap, X, ChevronDown, ChevronRight } from 'lucide-react';
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { user, activeTab, setActiveTab, tenant } = useAuthStore();
+  const [expandedSections, setExpandedSections] = useState({});
 
   const isSuperAdmin = user.role === 'super_admin';
 
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+
   const schoolAdminNav = [
-    { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard },
-    { id: 'students', label: 'Students & Admissions', icon: Users, badge: '1,250' },
-    { id: 'attendance', label: 'Attendance & SMS Alert', icon: CalendarCheck, badge: '94.8%' },
-    { id: 'exams', label: 'Exams & Tabulation (GPA 5.0)', icon: GraduationCap },
-    { id: 'fees', label: 'Fees Collection & POS', icon: CreditCard, badge: 'bKash' },
-    { id: 'routine', label: 'Class Routine Matrix', icon: Clock },
-    { id: 'notices', label: 'Notices & Bulk SMS Portal', icon: BellRing },
-    { id: 'payroll', label: 'Payroll & Accounts', icon: Wallet },
-    { id: 'academic', label: 'Academic Setup', icon: Settings },
+    {
+      section: 'Main',
+      items: [
+        { id: 'dashboard', label: 'Dashboard Overview' }
+      ]
+    },
+    {
+      section: 'Student Management',
+      items: [
+        { 
+          id: 'students', 
+          label: 'Student Management',
+          hasSubmenu: true,
+          submenu: [
+            { id: 'students_directory', label: 'Student Directory' },
+            { id: 'students_admission', label: 'New Admission Form' },
+            { id: 'students_idcard', label: 'ID Card Generator' },
+            { id: 'students_promotion', label: 'Promotion Engine' },
+            { id: 'students_certificates', label: 'TC & Certificates' }
+          ]
+        }
+      ]
+    },
+    {
+      section: 'Academic',
+      items: [
+        { 
+          id: 'academic', 
+          label: 'Academic Management',
+          hasSubmenu: true,
+          submenu: [
+            { id: 'academic_sessions', label: 'Sessions (2026-27)' },
+            { id: 'academic_shifts', label: 'Shifts & Versions' },
+            { id: 'academic_classes', label: 'Classes & Sections' },
+            { id: 'academic_subjects', label: 'Subjects & Teachers' },
+            { id: 'academic_routine', label: 'Routine Matrix' }
+          ]
+        },
+        { 
+          id: 'exams', 
+          label: 'Examination & Results',
+          hasSubmenu: true,
+          submenu: [
+            { id: 'exams_tabulation', label: 'Tabulation & Marksheets' },
+            { id: 'exams_marks', label: 'Marks Entry Portal' },
+            { id: 'exams_setup', label: 'Exam Setup & Weightage' },
+            { id: 'exams_grading', label: 'Grading Scale (5.0)' },
+            { id: 'exams_admit', label: 'Admit Card Generator' }
+          ]
+        }
+      ]
+    },
+    {
+      section: 'Attendance & Leave Management',
+      items: [
+        { 
+          id: 'attendance', 
+          label: 'Attendance & Leave Management',
+          hasSubmenu: true,
+          submenu: [
+            { id: 'attendance_student', label: 'Student Attendance & RFID' },
+            { id: 'attendance_staff', label: 'Staff Check-in/Out' },
+            { id: 'attendance_leave', label: 'Leave Applications' },
+            { id: 'attendance_reports', label: 'Reports & Absentee SMS' }
+          ]
+        }
+      ]
+    },
+    {
+      section: 'Finance',
+      items: [
+        { 
+          id: 'fees', 
+          label: 'Fees & Accounts (POS)',
+          hasSubmenu: true,
+          submenu: [
+            { id: 'fees_pos', label: 'POS Counter & bKash' },
+            { id: 'fees_due', label: 'Due Fees & SMS Reminders' },
+            { id: 'fees_structure', label: 'Fee Structure Setup' },
+            { id: 'fees_invoices', label: 'Invoices & 3-Part Receipts' },
+            { id: 'fees_ledger', label: 'Income / Expense Ledger' }
+          ]
+        },
+        { 
+          id: 'payroll', 
+          label: 'HR & Payroll',
+          hasSubmenu: true,
+          submenu: [
+            { id: 'payroll_salary', label: 'Salary Disbursement' },
+            { id: 'payroll_staff', label: 'Staff Directory' },
+            { id: 'payroll_setup', label: 'Payroll Setup' },
+            { id: 'payroll_bank', label: 'Bank Transfer Sheet' }
+          ]
+        }
+      ]
+    },
+    {
+      section: 'Communication',
+      items: [
+        { 
+          id: 'notices', 
+          label: 'SMS & Notice Board',
+          hasSubmenu: true,
+          submenu: [
+            { id: 'notices_sms', label: 'Bulk SMS Gateway' },
+            { id: 'notices_board', label: 'Notice Board' },
+            { id: 'notices_calendar', label: 'Event Calendar' }
+          ]
+        }
+      ]
+    },
+    {
+      section: 'Add-on Services',
+      items: [
+        { 
+          id: 'library', 
+          label: 'Library & Transport',
+          hasSubmenu: true,
+          submenu: [
+            { id: 'library_catalog', label: 'Library Catalog & Issues' },
+            { id: 'library_transport', label: 'Transport Routes & Fleet' }
+          ]
+        }
+      ]
+    },
+    {
+      section: 'System',
+      items: [
+        { 
+          id: 'settings', 
+          label: 'Settings & Permissions',
+          hasSubmenu: true,
+          submenu: [
+            { id: 'settings_profile', label: 'School Profile & Branding' },
+            { id: 'settings_roles', label: 'Roles & Permissions' },
+            { id: 'settings_audit', label: 'Audit Activity Logs' }
+          ]
+        }
+      ]
+    }
   ];
 
   const superAdminNav = [
-    { id: 'superadmin_tenants', label: 'All Schools & Colleges', icon: Building, badge: '38' },
-    { id: 'superadmin_analytics', label: 'SaaS Platform Analytics', icon: BarChart3 },
-    { id: 'academic', label: 'Global System Config', icon: Settings },
+    {
+      section: 'Platform Management',
+      items: [
+        { id: 'superadmin_tenants', label: 'All Schools & Colleges', badge: '38' },
+        { id: 'superadmin_analytics', label: 'SaaS Platform Analytics' }
+      ]
+    },
+    {
+      section: 'System',
+      items: [
+        { id: 'academic', label: 'Global System Config' }
+      ]
+    }
   ];
 
   const teacherNav = [
-    { id: 'dashboard', label: 'Teacher Dashboard', icon: LayoutDashboard },
-    { id: 'attendance', label: 'Take Class Attendance', icon: CalendarCheck },
-    { id: 'exams', label: 'Enter Exam Marks', icon: GraduationCap },
-    { id: 'routine', label: 'My Teaching Schedule', icon: Clock },
-    { id: 'notices', label: 'School Notices', icon: BellRing },
+    {
+      section: 'Main',
+      items: [
+        { id: 'dashboard', label: 'Teacher Dashboard' }
+      ]
+    },
+    {
+      section: 'Classroom',
+      items: [
+        { id: 'attendance', label: 'Take Class Attendance' },
+        { id: 'exams', label: 'Enter Exam Marks' },
+        { id: 'routine', label: 'My Teaching Schedule' }
+      ]
+    },
+    {
+      section: 'Information',
+      items: [
+        { id: 'notices', label: 'School Notices' }
+      ]
+    }
   ];
 
   const studentNav = [
-    { id: 'dashboard', label: 'Student Portal', icon: LayoutDashboard },
-    { id: 'students', label: 'Digital ID Card', icon: Contact2 },
-    { id: 'exams', label: 'Exam Results & Marksheet', icon: FileSpreadsheet },
-    { id: 'fees', label: 'Fee Dues & Online Pay', icon: CreditCard },
-    { id: 'routine', label: 'Class Routine', icon: Clock },
-    { id: 'notices', label: 'Notices & Circulars', icon: BellRing },
+    {
+      section: 'Main',
+      items: [
+        { id: 'dashboard', label: 'Student Portal' }
+      ]
+    },
+    {
+      section: 'Academic',
+      items: [
+        { id: 'students', label: 'Digital ID Card' },
+        { id: 'exams', label: 'Exam Results & Marksheet' },
+        { id: 'routine', label: 'Class Routine' }
+      ]
+    },
+    {
+      section: 'Finance',
+      items: [
+        { id: 'fees', label: 'Fee Dues & Online Pay' }
+      ]
+    },
+    {
+      section: 'Information',
+      items: [
+        { id: 'notices', label: 'Notices & Circulars' }
+      ]
+    }
   ];
 
   let currentNav = schoolAdminNav;
@@ -74,7 +243,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -104,44 +273,94 @@ export const Sidebar = ({ isOpen, onClose }) => {
           </div>
 
           {/* Navigation Links */}
-          <div className="px-3 py-4 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
-            <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Navigation Menu
-            </div>
-            {currentNav.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    onClose();
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
-                    isActive
-                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-emerald-500'}`} />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge && (
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        isActive
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+          <div className="px-3 py-4 space-y-4 overflow-y-auto max-h-[calc(100vh-140px)]">
+            {currentNav.map((section) => (
+              <div key={section.section}>
+                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {section.section}
+                </div>
+                <div className="space-y-1">
+                  {section.items.map((item) => {
+                    const isActive = activeTab === item.id;
+                    const isExpanded = expandedSections[item.id];
+                    const isSubmenuActive = item.submenu?.some(sub => activeTab === sub.id);
+                    
+                    if (item.hasSubmenu) {
+                      return (
+                        <div key={item.id}>
+                          <button
+                            onClick={() => toggleSection(item.id)}
+                            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all border-l-4 ${
+                              isSubmenuActive || isActive
+                                ? 'bg-emerald-50 border-emerald-600 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100'
+                                : 'border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-emerald-300'
+                            }`}
+                          >
+                            <span>{item.label}</span>
+                            {isExpanded ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </button>
+                          {isExpanded && item.submenu && (
+                            <div className="ml-4 mt-1 space-y-1">
+                              {item.submenu.map((subItem) => {
+                                const isSubActive = activeTab === subItem.id;
+                                return (
+                                  <button
+                                    key={subItem.id}
+                                    onClick={() => {
+                                      setActiveTab(subItem.id);
+                                      onClose();
+                                    }}
+                                    className={`w-full flex items-center px-4 py-2 rounded-lg text-xs font-medium transition-all border-l-2 ${
+                                      isSubActive
+                                        ? 'bg-emerald-100 border-emerald-600 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100'
+                                        : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:border-emerald-400'
+                                    }`}
+                                  >
+                                    <span>{subItem.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id);
+                          onClose();
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all border-l-4 ${
+                          isActive
+                            ? 'bg-emerald-50 border-emerald-600 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100'
+                            : 'border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-emerald-300'
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        {item.badge && (
+                          <span
+                            className={`text-xs font-bold px-2 py-0.5 rounded ${
+                              isActive
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

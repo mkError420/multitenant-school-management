@@ -25,27 +25,27 @@ const DEMO_TENANTS = [
 ];
 
 const SCHOOL_MENU = [
-  { group: 'Main',              items: [{ id: 'dashboard',  icon: '📊', label: 'Dashboard Overview' }] },
+  { group: 'Main',              items: [{ id: 'dashboard',  label: 'Dashboard Overview' }] },
   { group: 'Academic',          items: [
-    { id: 'academic',   icon: '🏛️', label: 'Academic Management' },
-    { id: 'students',   icon: '👥', label: 'Student Management' },
-    { id: 'attendance', icon: '📅', label: 'Attendance & Leaves' },
-    { id: 'exams',      icon: '🎓', label: 'Examination & Results' },
+    { id: 'academic',    label: 'Academic Management' },
+    { id: 'students',   label: 'Student Management' },
+    { id: 'attendance',  label: 'Attendance & Leaves' },
+    { id: 'exams',       label: 'Examination & Results' },
   ]},
   { group: 'Finance & HR',      items: [
-    { id: 'fees', icon: '💳', label: 'Fees & Accounts (POS)' },
-    { id: 'hr',   icon: '💰', label: 'HR & Payroll' },
+    { id: 'fees',  label: 'Fees & Accounts (POS)' },
+    { id: 'hr',   label: 'HR & Payroll' },
   ]},
-  { group: 'Communication',     items: [{ id: 'sms',     icon: '📱', label: 'SMS & Notice Board' }] },
-  { group: 'Add-on Services',   items: [{ id: 'library', icon: '📚', label: 'Library & Transport' }] },
-  { group: 'System',            items: [{ id: 'settings',icon: '⚙️', label: 'Settings & Permissions' }] },
+  { group: 'Communication',     items: [{ id: 'sms',     label: 'SMS & Notice Board' }] },
+  { group: 'Add-on Services',   items: [{ id: 'library', label: 'Library & Transport' }] },
+  { group: 'System',            items: [{ id: 'settings',label: 'Settings & Permissions' }] },
 ];
 
 const SUPER_MENU = [
   {
     group: 'SaaS Administration',
     items: [
-      { id: 'superadmin', icon: '⚡', label: 'SaaS Platform Console' },
+      { id: 'superadmin', label: 'SaaS Platform Console' },
     ]
   }
 ];

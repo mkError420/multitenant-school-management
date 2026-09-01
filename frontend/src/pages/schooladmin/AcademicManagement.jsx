@@ -86,11 +86,11 @@ export const AcademicManagement = () => {
         {/* Sub-Tabs */}
         <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold">
           {[
-            { id: 'sessions', label: '📅 Sessions (2026-27)' },
-            { id: 'shifts', label: '⏰ Shifts & Versions' },
-            { id: 'classes', label: '🏛️ Classes & Sections' },
-            { id: 'subjects', label: '📖 Subjects & Teachers' },
-            { id: 'routine', label: '🗓️ Routine Matrix' }
+            { id: 'sessions', label: ' Sessions (2026-27)' },
+            { id: 'shifts', label: ' Shifts & Versions' },
+            { id: 'classes', label: ' Classes & Sections' },
+            { id: 'subjects', label: ' Subjects & Teachers' },
+            { id: 'routine', label: ' Routine Matrix' }
           ].map((tab) => (
             <button
               key={tab.id}
