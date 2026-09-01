@@ -1,5 +1,5 @@
-import React from 'react';
-import { StatCard, Badge } from '../../components/common/StatCard';
+import React, { useState } from 'react';
+import { StatCard, Badge, Modal } from '../../components/common/StatCard';
 import {
   Users,
   UserCheck,
@@ -10,14 +10,33 @@ import {
   DollarSign,
   BellRing,
   ArrowUpRight,
+  ArrowDownRight,
   Sparkles,
   School,
-  Clock
+  Clock,
+  AlertCircle,
+  FileCheck,
+  CheckCircle2,
+  XCircle,
+  UserX,
+  FileText
 } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
 
 export const DashboardOverview = () => {
   const { tenant, setActiveTab } = useAuthStore();
+  const [selectedPeriod, setSelectedPeriod] = useState('month'); // 'month' | 'year'
+
+  const [alerts, setAlerts] = useState([
+    { id: 1, type: 'leave', title: 'Teacher Leave Request: Nusrat Jahan', desc: 'Applied for Medical Leave (3 days: 05-07 Mar)', time: '10 mins ago', status: 'pending' },
+    { id: 2, type: 'fee', title: 'Pending Online Fee Clearance: BDT 3,100', desc: 'bKash TrxID #BKASH9A87X21 for Tanvir Hasan (Roll 1)', time: '25 mins ago', status: 'pending' },
+    { id: 3, type: 'absence', title: "Today's Teacher Absence: Md. Anwar Hossain", desc: 'Chemistry Class in Room 302 needs proxy substitution', time: '1 hour ago', status: 'alert' },
+    { id: 4, type: 'notice', title: 'Half-Yearly Exam Routine 2026 Published', desc: 'Notified to 1,250 parents via SMS & Noticeboard', time: '2 hours ago', status: 'info' }
+  ]);
+
+  const handleApproveAlert = (id) => {
+    setAlerts(alerts.map(a => a.id === id ? { ...a, status: 'approved' } : a));
+  };
 
   return (
     <div className="space-y-6">
@@ -28,13 +47,13 @@ export const DashboardOverview = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-emerald-200 text-xs font-bold mb-2">
               <School className="w-3.5 h-3.5" />
-              EIIN: {tenant?.eiin_number} • Education Board: Dhaka
+              EIIN: {tenant?.eiin_number || tenant?.eiin} • Education Board: Dhaka
             </div>
             <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight">
-              {tenant?.name || 'Dhaka Residential Model College'}
+              {tenant?.name || 'Mane School and College'}
             </h1>
             <p className="text-emerald-100/80 text-xs lg:text-sm mt-1 max-w-xl">
-              Academic Session 2026 Active • Morning & Day Shifts Operating • NCTB Curriculum Standard
+              Academic Session 2026 Active • Morning & Day Shifts • Bangla & English Version
             </p>
           </div>
 
@@ -47,80 +66,99 @@ export const DashboardOverview = () => {
               <span>New Admission</span>
             </button>
             <button
-              onClick={() => setActiveTab('attendance')}
+              onClick={() => setActiveTab('fees')}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all"
             >
-              <CalendarCheck className="w-4 h-4" />
-              <span>Today's Attendance</span>
+              <CreditCard className="w-4 h-4" />
+              <span>Collect Fee (POS)</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 1. Quick Stats Counter Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
-          title="Total Enrolled Students"
+          title="Active Students"
           value="1,250"
-          change="35"
+          change="35 new"
           isPositive={true}
           icon={Users}
           color="emerald"
-          subtext="Class 6 to Class 12 (HSC)"
+          subtext="Class 1 to 12 (HSC)"
         />
         <StatCard
-          title="Today's Attendance Rate"
+          title="Teachers & Staff"
+          value="45 Faculty"
+          icon={UserCheck}
+          color="blue"
+          subtext="40 Present • 1 On-Leave"
+        />
+        <StatCard
+          title={selectedPeriod === 'month' ? "Revenue (March)" : "Total Revenue (Year)"}
+          value={selectedPeriod === 'month' ? "৳ 485,000" : "৳ 5,420,000"}
+          change="14%"
+          isPositive={true}
+          icon={DollarSign}
+          color="indigo"
+          subtext="bKash / Cash Collection"
+        />
+        <StatCard
+          title="Pending Due Fees"
+          value="৳ 65,000"
+          icon={CreditCard}
+          color="rose"
+          subtext="Auto-SMS Reminders Ready"
+        />
+        <StatCard
+          title="Attendance Today"
           value="94.8%"
           change="1.2%"
           isPositive={true}
-          icon={UserCheck}
-          color="blue"
-          subtext="1,185 Present • 65 Absent"
-        />
-        <StatCard
-          title="Fee Collected (March 2026)"
-          value="৳ 485,000"
-          change="14%"
-          isPositive={true}
-          icon={CreditCard}
-          color="indigo"
-          subtext="Due Balance: ৳ 65,000"
-        />
-        <StatCard
-          title="SMS Credits Remaining"
-          value={tenant?.sms_balance?.toLocaleString() || '4,500'}
-          icon={Send}
+          icon={CalendarCheck}
           color="purple"
-          subtext="GreenwebBD Gateway Active"
+          subtext="1,185 Present • 65 Absent"
         />
       </div>
 
-      {/* Main Grid: Quick Actions & Live Attendance / Financial Charts */}
+      {/* 2. Charts, Financial Trends & Live Feeds */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Attendance & Fee Status */}
+        {/* Left 2 Cols: Financial Trends & Quick Actions */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Quick Action Hub */}
+          {/* Quick Action Shortcuts Hub */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-3">
-              ⚡ Administrative Quick Actions
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-3 flex items-center justify-between">
+              <span>⚡ Core Administrative Actions</span>
+              <span className="text-xs text-slate-400 font-normal">Fast 1-Click Operations</span>
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
               <button
                 onClick={() => setActiveTab('students')}
-                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:border-emerald-300 text-left transition-all group"
+                className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:border-emerald-300 text-left transition-all group"
               >
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
                   <UserPlus className="w-4 h-4" />
                 </div>
-                <p className="font-bold text-slate-900 dark:text-white">Admit Student</p>
-                <p className="text-[10px] text-slate-400">Roll & Profile</p>
+                <p className="font-bold text-slate-900 dark:text-white">Add Student</p>
+                <p className="text-[10px] text-slate-400">Admission Form</p>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('fees')}
+                className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:border-indigo-300 text-left transition-all group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <p className="font-bold text-slate-900 dark:text-white">Collect Fee</p>
+                <p className="text-[10px] text-slate-400">bKash/POS Slip</p>
               </button>
 
               <button
                 onClick={() => setActiveTab('attendance')}
-                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-300 text-left transition-all group"
+                className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-300 text-left transition-all group"
               >
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
                   <CalendarCheck className="w-4 h-4" />
                 </div>
                 <p className="font-bold text-slate-900 dark:text-white">Take Attendance</p>
@@ -128,66 +166,65 @@ export const DashboardOverview = () => {
               </button>
 
               <button
-                onClick={() => setActiveTab('fees')}
-                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:border-indigo-300 text-left transition-all group"
+                onClick={() => setActiveTab('exams')}
+                className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:border-purple-300 text-left transition-all group"
               >
-                <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <CreditCard className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-400 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                  <FileText className="w-4 h-4" />
                 </div>
-                <p className="font-bold text-slate-900 dark:text-white">Collect Fees POS</p>
-                <p className="text-[10px] text-slate-400">bKash / Cash Receipt</p>
+                <p className="font-bold text-slate-900 dark:text-white">GPA 5.0 Result</p>
+                <p className="text-[10px] text-slate-400">Marksheet / Tabulation</p>
               </button>
 
               <button
-                onClick={() => setActiveTab('exams')}
-                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:border-purple-300 text-left transition-all group"
+                onClick={() => setActiveTab('notices')}
+                className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:border-amber-300 text-left transition-all group"
               >
-                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <ArrowUpRight className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                  <BellRing className="w-4 h-4" />
                 </div>
-                <p className="font-bold text-slate-900 dark:text-white">GPA 5.0 Result</p>
-                <p className="text-[10px] text-slate-400">NCTB Tabulation</p>
+                <p className="font-bold text-slate-900 dark:text-white">Post Notice</p>
+                <p className="text-[10px] text-slate-400">Bulk SMS Broadcast</p>
               </button>
             </div>
           </div>
 
-          {/* Class-wise Student Distribution */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+          {/* Monthly Income vs Expense & Fee Progress Visuals */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                  Class-wise Enrollment & Distribution
+                  Monthly Financial Progress (Income vs Expense)
                 </h3>
-                <p className="text-xs text-slate-500">Boys vs Girls Ratio in Session 2026</p>
+                <p className="text-xs text-slate-500">March 2026 Operational Budget Breakdown</p>
               </div>
-              <Badge variant="success">Total: 1,250</Badge>
+              <div className="flex gap-2">
+                <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Income: ৳569,000
+                </span>
+                <span className="flex items-center gap-1 text-[11px] font-bold text-rose-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Expense: ৳344,500
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-3">
+            {/* Income vs Expense Comparative Bars */}
+            <div className="space-y-3 pt-2">
               {[
-                { name: 'Class 6 (Six)', boys: 120, girls: 110, total: 230, pct: 85 },
-                { name: 'Class 7 (Seven)', boys: 105, girls: 95, total: 200, pct: 75 },
-                { name: 'Class 8 (Eight - JSC)', boys: 115, girls: 105, total: 220, pct: 80 },
-                { name: 'Class 9 (Nine - SSC Batch)', boys: 130, girls: 120, total: 250, pct: 90 },
-                { name: 'Class 10 (Ten - SSC Candidate)', boys: 140, girls: 130, total: 270, pct: 100 },
-                { name: 'Class 11 (HSC 1st Year)', boys: 45, girls: 35, total: 80, pct: 30 }
-              ].map((c, i) => (
-                <div key={i} className="space-y-1 text-xs">
+                { month: 'January 2026', income: 520000, expense: 310000, collectedPct: 92 },
+                { month: 'February 2026', income: 540000, expense: 330000, collectedPct: 95 },
+                { month: 'March 2026 (Running)', income: 569000, expense: 344500, collectedPct: 88 }
+              ].map((row, idx) => (
+                <div key={idx} className="space-y-1 text-xs">
                   <div className="flex justify-between font-semibold">
-                    <span className="text-slate-800 dark:text-slate-200">{c.name}</span>
+                    <span className="text-slate-800 dark:text-slate-200">{row.month}</span>
                     <span className="text-slate-500">
-                      {c.boys} Boys • {c.girls} Girls (<strong>{c.total} Students</strong>)
+                      Surplus: <strong className="text-emerald-600">+৳{(row.income - row.expense).toLocaleString()}</strong> (Collection {row.collectedPct}%)
                     </span>
                   </div>
-                  <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
-                    <div
-                      className="bg-emerald-600 h-full rounded-l-full"
-                      style={{ width: `${(c.boys / c.total) * 100}%` }}
-                    />
-                    <div
-                      className="bg-teal-400 h-full rounded-r-full"
-                      style={{ width: `${(c.girls / c.total) * 100}%` }}
-                    />
+                  <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                    <div className="bg-emerald-600 h-full rounded-l-full" style={{ width: `${(row.income / 700000) * 100}%` }}></div>
+                    <div className="bg-rose-500 h-full" style={{ width: `${(row.expense / 700000) * 100}%` }}></div>
                   </div>
                 </div>
               ))}
@@ -195,73 +232,59 @@ export const DashboardOverview = () => {
           </div>
         </div>
 
-        {/* Right 1 Col: Live Notice Board & Today's Attendance Mini Summary */}
+        {/* Right 1 Col: Real-time Alerts & Feeds (Pending fees, leaves, notices, teacher absences) */}
         <div className="space-y-6">
-          {/* Today's Attendance Gauge */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-2">
-              📊 Today's Attendance
-            </h3>
-            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 text-center">
-              <span className="text-3xl font-black text-emerald-700 dark:text-emerald-400">94.8%</span>
-              <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mt-0.5">
-                Overall Daily Attendance Rate
-              </p>
-
-              <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-emerald-200 dark:border-emerald-900/50 text-left text-xs">
-                <div>
-                  <span className="text-slate-500 text-[10px] block">Present Students</span>
-                  <span className="font-bold text-emerald-700 dark:text-emerald-400">1,185</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 text-[10px] block">Absent Students</span>
-                  <span className="font-bold text-rose-600">65</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setActiveTab('attendance')}
-              className="w-full mt-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-white text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors"
-            >
-              Dispatch Absentee SMS Alert →
-            </button>
-          </div>
-
-          {/* Institutional Circulars */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                📢 Institutional Circulars
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 text-amber-500" />
+                <span>Real-Time Institutional Alerts</span>
               </h3>
-              <button
-                onClick={() => setActiveTab('notices')}
-                className="text-xs text-emerald-600 hover:underline font-bold"
-              >
-                View All
-              </button>
+              <Badge variant="warning">{alerts.filter(a => a.status === 'pending').length} Pending</Badge>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-emerald-600 uppercase">Exam Notice</span>
-                <h4 className="font-bold text-slate-900 dark:text-white mt-0.5">
-                  Half-Yearly Examination 2026 Routine Published
-                </h4>
-                <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
-                  Exams commence from 10th June. Collect Admit Cards from accounts office.
-                </p>
-              </div>
+            <div className="space-y-3">
+              {alerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  className={`p-3 rounded-xl border text-xs space-y-1.5 transition-all ${
+                    alert.status === 'approved'
+                      ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200'
+                      : alert.type === 'absence'
+                      ? 'bg-rose-50/50 dark:bg-rose-950/30 border-rose-200'
+                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 dark:text-white">{alert.title}</span>
+                    <span className="text-[10px] text-slate-400">{alert.time}</span>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-tight">{alert.desc}</p>
+                  
+                  {alert.status === 'pending' && (
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => handleApproveAlert(alert.id)}
+                        className="px-2.5 py-1 rounded bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => setAlerts(alerts.filter(a => a.id !== alert.id))}
+                        className="px-2.5 py-1 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[10px]"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  )}
 
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-purple-600 uppercase">Holiday Notice</span>
-                <h4 className="font-bold text-slate-900 dark:text-white mt-0.5">
-                  Shaheed Dibash (21st February) Program
-                </h4>
-                <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
-                  Special cultural program at college auditorium at 9:00 AM.
-                </p>
-              </div>
+                  {alert.status === 'approved' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                      <CheckCircle2 className="w-3 h-3" /> Approved
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
