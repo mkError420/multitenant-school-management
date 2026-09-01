@@ -1,35 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatCard, Badge, Modal } from '../../components/common/StatCard';
 import {
   Building2,
   Users,
-  DollarSign,
+  Layers,
   Send,
-  Plus,
-  Search,
-  ExternalLink,
-  ShieldCheck,
-  Power,
   BarChart3,
   Server,
-  Sparkles,
+  Plus,
+  Search,
+  Power,
+  ExternalLink,
+  Edit,
+  Trash2,
+  DollarSign,
   CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  CreditCard,
-  Settings,
   Database,
-  Layers,
   Phone,
   Mail,
   Lock,
-  Edit
+  Sparkles,
+  ShieldCheck,
+  XCircle
 } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
+import { schoolAdminApi } from '../../services/schoolAdminApi';
 
 export const SuperAdminDashboard = () => {
-  const { tenant, setTenant, setActiveTab } = useAuthStore();
-  const [activeSubTab, setActiveSubTab] = useState('tenants'); // 'tenants' | 'plans' | 'sms_gateway' | 'analytics' | 'system'
+  const { tenant, setTenant, setActiveTab, activeTab } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('all');
 
@@ -38,6 +36,10 @@ export const SuperAdminDashboard = () => {
   const [isRechargeSMSModalOpen, setIsRechargeSMSModalOpen] = useState(false);
   const [selectedTenantForSMS, setSelectedTenantForSMS] = useState(null);
   const [smsRechargeAmount, setSmsRechargeAmount] = useState(1000);
+  const [isSchoolAdminModalOpen, setIsSchoolAdminModalOpen] = useState(false);
+  const [selectedSchoolAdmin, setSelectedSchoolAdmin] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Initial Tenants List
   const [tenantsList, setTenantsList] = useState([
@@ -188,6 +190,46 @@ export const SuperAdminDashboard = () => {
     contact_phone: '+8801700000000'
   });
 
+  // School Admins List - Load from API
+  const [schoolAdmins, setSchoolAdmins] = useState([]);
+  const [isLoadingSchoolAdmins, setIsLoadingSchoolAdmins] = useState(false);
+
+  // Load school admins from API on mount
+  useEffect(() => {
+    loadSchoolAdmins();
+  }, []);
+
+  const loadSchoolAdmins = async () => {
+    setIsLoadingSchoolAdmins(true);
+    try {
+      const response = await schoolAdminApi.getSchoolAdmins();
+      if (response.success) {
+        setSchoolAdmins(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load school admins:', error);
+      // Fallback to localStorage if API fails
+      const saved = localStorage.getItem('schoolAdmins');
+      if (saved) {
+        setSchoolAdmins(JSON.parse(saved));
+      }
+    } finally {
+      setIsLoadingSchoolAdmins(false);
+    }
+  };
+
+  // Form State for School Admin
+  const [schoolAdminForm, setSchoolAdminForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    school_id: '',
+    role: 'Admin',
+    status: 'active',
+    password: '',
+    confirm_password: ''
+  });
+
   // Filter Tenants
   const filteredTenants = tenantsList.filter((t) => {
     const matchesSearch =
@@ -255,6 +297,145 @@ export const SuperAdminDashboard = () => {
     setTenant(targetTenant);
     setActiveTab('dashboard');
     alert(`Switched active portal to: ${targetTenant.name}`);
+  };
+
+  // School Admin Handlers
+  const handleAddSchoolAdmin = async (e) => {
+    e.preventDefault();
+    
+    // Password validation
+    if (schoolAdminForm.password && schoolAdminForm.password !== schoolAdminForm.confirm_password) {
+      alert('❌ Passwords do not match!');
+      return;
+    }
+    
+    if (schoolAdminForm.password && schoolAdminForm.password.length < 6) {
+      alert('❌ Password must be at least 6 characters long!');
+      return;
+    }
+    
+    const selectedSchool = tenantsList.find(t => t.id === Number(schoolAdminForm.school_id));
+    const adminData = {
+      name: schoolAdminForm.name,
+      email: schoolAdminForm.email,
+      phone: schoolAdminForm.phone,
+      school_id: Number(schoolAdminForm.school_id),
+      role: schoolAdminForm.role,
+      status: schoolAdminForm.status,
+      password: schoolAdminForm.password || 'default123'
+    };
+
+    try {
+      const response = await schoolAdminApi.createSchoolAdmin(adminData);
+      if (response.success) {
+        await loadSchoolAdmins(); // Reload from API
+        alert(`✅ School admin "${adminData.name}" created successfully for ${selectedSchool?.name || 'Unknown School'}`);
+        setIsSchoolAdminModalOpen(false);
+        setSchoolAdminForm({
+          name: '',
+          email: '',
+          phone: '',
+          school_id: '',
+          role: 'Admin',
+          status: 'active',
+          password: '',
+          confirm_password: ''
+        });
+      }
+    } catch (error) {
+      alert('❌ Failed to create school admin. Please try again.');
+    }
+  };
+
+  const handleEditSchoolAdmin = (admin) => {
+    setSelectedSchoolAdmin(admin);
+    setSchoolAdminForm({
+      name: admin.name,
+      email: admin.email,
+      phone: admin.phone,
+      school_id: admin.school_id,
+      role: admin.role,
+      status: admin.status,
+      password: '',
+      confirm_password: ''
+    });
+    setIsSchoolAdminModalOpen(true);
+  };
+
+  const handleUpdateSchoolAdmin = async (e) => {
+    e.preventDefault();
+    
+    // Password validation for password change
+    if (schoolAdminForm.password && schoolAdminForm.password !== schoolAdminForm.confirm_password) {
+      alert('❌ Passwords do not match!');
+      return;
+    }
+    
+    if (schoolAdminForm.password && schoolAdminForm.password.length < 6) {
+      alert('❌ Password must be at least 6 characters long!');
+      return;
+    }
+    
+    const adminData = {
+      id: selectedSchoolAdmin.id,
+      name: schoolAdminForm.name,
+      email: schoolAdminForm.email,
+      phone: schoolAdminForm.phone,
+      school_id: Number(schoolAdminForm.school_id),
+      role: schoolAdminForm.role,
+      status: schoolAdminForm.status,
+      password: schoolAdminForm.password
+    };
+
+    try {
+      const response = await schoolAdminApi.updateSchoolAdmin(adminData);
+      if (response.success) {
+        await loadSchoolAdmins(); // Reload from API
+        const message = schoolAdminForm.password 
+          ? `✅ School admin "${schoolAdminForm.name}" updated successfully with new password`
+          : `✅ School admin "${schoolAdminForm.name}" updated successfully`;
+        alert(message);
+        setIsSchoolAdminModalOpen(false);
+        setSelectedSchoolAdmin(null);
+        setSchoolAdminForm({
+          name: '',
+          email: '',
+          phone: '',
+          school_id: '',
+          role: 'Admin',
+          status: 'active',
+          password: '',
+          confirm_password: ''
+        });
+      }
+    } catch (error) {
+      alert('❌ Failed to update school admin. Please try again.');
+    }
+  };
+
+  const handleDeleteSchoolAdmin = async (adminId) => {
+    if (confirm('Are you sure you want to delete this school admin?')) {
+      try {
+        const response = await schoolAdminApi.deleteSchoolAdmin(adminId);
+        if (response.success) {
+          await loadSchoolAdmins(); // Reload from API
+          alert('School admin deleted successfully');
+        }
+      } catch (error) {
+        alert('❌ Failed to delete school admin. Please try again.');
+      }
+    }
+  };
+
+  const handleToggleSchoolAdminStatus = async (adminId) => {
+    try {
+      const response = await schoolAdminApi.toggleSchoolAdminStatus(adminId);
+      if (response.success) {
+        await loadSchoolAdmins(); // Reload from API
+      }
+    } catch (error) {
+      alert('❌ Failed to toggle school admin status. Please try again.');
+    }
   };
 
   return (
@@ -326,34 +507,144 @@ export const SuperAdminDashboard = () => {
         />
       </div>
 
-      {/* Navigation Sub-Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
-        <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold">
-          {[
-            { id: 'tenants', label: '🏢 Institutions Directory', icon: Building2 },
-            { id: 'plans', label: '💎 Subscription Plans', icon: Layers },
-            { id: 'sms_gateway', label: '📱 SMS Gateway & Credits', icon: Send },
-            { id: 'analytics', label: '📊 Platform Financials', icon: BarChart3 },
-            { id: 'system', label: '🛡️ System & Isolation', icon: Server }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveSubTab(tab.id)}
-              className={`px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all ${
-                activeSubTab === tab.id
-                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm font-extrabold'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <tab.icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ═══════════ DASHBOARD OVERVIEW ═══════════ */}
+      {activeTab === 'dashboard' && (
+        <div className="space-y-6">
+          {/* Welcome Banner */}
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white rounded-3xl p-6 lg:p-8 shadow-xl border border-indigo-500/50 relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="relative z-10">
+              <h1 className="text-2xl lg:text-3xl font-extrabold mb-2">
+                Welcome, Super Administrator
+              </h1>
+              <p className="text-indigo-100 text-sm lg:text-base max-w-2xl">
+                Monitor your SaaS platform performance, manage tenant institutions, and oversee school administrator accounts across the entire platform.
+              </p>
+            </div>
+          </div>
 
-      {/* ═══════════ SUBTAB 1: TENANTS DIRECTORY ═══════════ */}
-      {activeSubTab === 'tenants' && (
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              title="Total Institutions"
+              value={tenantsList.length}
+              change="+2 this month"
+              isPositive={true}
+              icon={Building2}
+              color="emerald"
+              subtext="Active schools & colleges"
+            />
+            <StatCard
+              title="School Admins"
+              value={schoolAdmins.length}
+              change="+5 new admins"
+              isPositive={true}
+              icon={Users}
+              color="blue"
+              subtext="Platform administrators"
+            />
+            <StatCard
+              title="Monthly Revenue"
+              value={`৳ ${tenantsList.reduce((acc, t) => acc + (t.status === 'active' ? t.monthly_fee : 0), 0).toLocaleString()}`}
+              change="+12% growth"
+              isPositive={true}
+              icon={DollarSign}
+              color="indigo"
+              subtext="SaaS subscriptions"
+            />
+            <StatCard
+              title="SMS Credits Pool"
+              value={tenantsList.reduce((acc, t) => acc + t.sms_balance, 0).toLocaleString()}
+              icon={Send}
+              color="purple"
+              subtext="Available for distribution"
+            />
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <h3 className="font-bold text-base text-slate-900 dark:text-white mb-4">Quick Actions</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <button
+                onClick={() => setActiveTab('tenants')}
+                className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 hover:bg-emerald-100 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-slate-900 dark:text-white">Add New Institution</p>
+                  <p className="text-xs text-slate-500">Onboard a new school</p>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('school_admins')}
+                className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 hover:bg-blue-100 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-slate-900 dark:text-white">Manage Admins</p>
+                  <p className="text-xs text-slate-500">View school administrators</p>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('sms_gateway')}
+                className="flex items-center gap-3 p-4 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900 hover:bg-purple-100 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center text-white">
+                  <Send className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-slate-900 dark:text-white">SMS Credits</p>
+                  <p className="text-xs text-slate-500">Manage SMS allocation</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <h3 className="font-bold text-base text-slate-900 dark:text-white mb-4">Recent Activity</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">New institution onboarded</p>
+                  <p className="text-[10px] text-slate-500">Rajshahi Collegiate School joined the platform</p>
+                </div>
+                <span className="text-[10px] text-slate-400">2 hours ago</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">School admin created</p>
+                  <p className="text-[10px] text-slate-500">New admin added for Ideal School and College</p>
+                </div>
+                <span className="text-[10px] text-slate-400">5 hours ago</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+                <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
+                  <Send className="w-4 h-4 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">SMS credits distributed</p>
+                  <p className="text-[10px] text-slate-500">5,000 SMS credits added to DRMC account</p>
+                </div>
+                <span className="text-[10px] text-slate-400">1 day ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ TENANTS DIRECTORY ═══════════ */}
+      {activeTab === 'tenants' && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
           {/* Filter Bar */}
           <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -475,8 +766,121 @@ export const SuperAdminDashboard = () => {
         </div>
       )}
 
-      {/* ═══════════ SUBTAB 2: PLANS & PRICING ═══════════ */}
-      {activeSubTab === 'plans' && (
+      {/* ═══════════ SCHOOL ADMIN PROFILES ═══════════ */}
+      {activeTab === 'school_admins' && (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+          {/* Header */}
+          <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                School Administrator Profiles
+              </h3>
+              <p className="text-xs text-slate-500">Manage school admin accounts and permissions</p>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedSchoolAdmin(null);
+                setSchoolAdminForm({
+                  name: '',
+                  email: '',
+                  phone: '',
+                  school_id: '',
+                  role: 'Admin',
+                  status: 'active',
+                  password: '',
+                  confirm_password: ''
+                });
+                setIsSchoolAdminModalOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-lg shadow-indigo-500/25 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add School Admin</span>
+            </button>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th className="py-3.5 px-4">Admin Name & Contact</th>
+                  <th className="py-3.5 px-4">School</th>
+                  <th className="py-3.5 px-4">Role</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Created</th>
+                  <th className="py-3.5 px-4">Last Login</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                {schoolAdmins.map((admin) => (
+                  <tr key={admin.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-white">{admin.name}</p>
+                        <p className="text-[11px] text-slate-400">{admin.email}</p>
+                        <p className="text-[10px] text-slate-400">{admin.phone}</p>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <Badge variant="indigo">{admin.school_name}</Badge>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                        {admin.role}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <Badge variant={admin.status === 'active' ? 'success' : 'danger'}>
+                        {admin.status.toUpperCase()}
+                      </Badge>
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">
+                      {admin.created_at}
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">
+                      {admin.last_login || 'Never'}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleToggleSchoolAdminStatus(admin.id)}
+                          className={`p-1.5 rounded-lg text-[10px] font-bold border ${
+                            admin.status === 'active'
+                              ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
+                              : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                          }`}
+                          title={admin.status === 'active' ? 'Suspend Admin' : 'Activate Admin'}
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleEditSchoolAdmin(admin)}
+                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                          title="Edit Admin"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSchoolAdmin(admin.id)}
+                          className="p-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50"
+                          title="Delete Admin"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ PLANS & PRICING ═══════════ */}
+      {activeTab === 'plans' && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
@@ -532,8 +936,8 @@ export const SuperAdminDashboard = () => {
         </div>
       )}
 
-      {/* ═══════════ SUBTAB 3: SMS GATEWAY ═══════════ */}
-      {activeSubTab === 'sms_gateway' && (
+      {/* ═══════════ SMS GATEWAY ═══════════ */}
+      {activeTab === 'sms_gateway' && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
           <div className="flex justify-between items-center pb-3 border-b">
             <div>
@@ -565,8 +969,8 @@ export const SuperAdminDashboard = () => {
         </div>
       )}
 
-      {/* ═══════════ SUBTAB 4: PLATFORM FINANCIALS ═══════════ */}
-      {activeSubTab === 'analytics' && (
+      {/* ═══════════ PLATFORM FINANCIALS ═══════════ */}
+      {activeTab === 'analytics' && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
           <div className="flex justify-between items-center pb-3 border-b">
             <div>
@@ -602,8 +1006,8 @@ export const SuperAdminDashboard = () => {
         </div>
       )}
 
-      {/* ═══════════ SUBTAB 5: SYSTEM & ISOLATION ═══════════ */}
-      {activeSubTab === 'system' && (
+      {/* ═══════════ SYSTEM & ISOLATION ═══════════ */}
+      {activeTab === 'system' && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
           <div className="flex justify-between items-center pb-3 border-b">
             <div>
@@ -824,6 +1228,207 @@ export const SuperAdminDashboard = () => {
                 className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow"
               >
                 Add Credits
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ═══════════ SCHOOL ADMIN MODAL ═══════════ */}
+      {isSchoolAdminModalOpen && (
+        <Modal
+          isOpen={true}
+          onClose={() => {
+            setIsSchoolAdminModalOpen(false);
+            setSelectedSchoolAdmin(null);
+            setSchoolAdminForm({
+              name: '',
+              email: '',
+              phone: '',
+              school_id: '',
+              role: 'Admin',
+              status: 'active',
+              password: '',
+              confirm_password: ''
+            });
+          }}
+          title={selectedSchoolAdmin ? '✏️ Edit School Admin' : '👤 Add New School Admin'}
+          maxWidth="max-w-xl"
+        >
+          <form onSubmit={selectedSchoolAdmin ? handleUpdateSchoolAdmin : handleAddSchoolAdmin} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Prof. Kazi Faruq Ahmed"
+                  value={schoolAdminForm.name}
+                  onChange={(e) => setSchoolAdminForm({ ...schoolAdminForm, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="admin@school.edu.bd"
+                  value={schoolAdminForm.email}
+                  onChange={(e) => setSchoolAdminForm({ ...schoolAdminForm, email: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Phone Number *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="+8801700000000"
+                  value={schoolAdminForm.phone}
+                  onChange={(e) => setSchoolAdminForm({ ...schoolAdminForm, phone: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Assign to School *
+                </label>
+                <select
+                  required
+                  value={schoolAdminForm.school_id}
+                  onChange={(e) => setSchoolAdminForm({ ...schoolAdminForm, school_id: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold"
+                >
+                  <option value="">Select a school...</option>
+                  {tenantsList.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Role *
+                </label>
+                <select
+                  required
+                  value={schoolAdminForm.role}
+                  onChange={(e) => setSchoolAdminForm({ ...schoolAdminForm, role: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                >
+                  <option value="Principal">Principal</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Vice Principal">Vice Principal</option>
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Status *
+                </label>
+                <select
+                  required
+                  value={schoolAdminForm.status}
+                  onChange={(e) => setSchoolAdminForm({ ...schoolAdminForm, status: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                >
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Password Section */}
+            <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
+              <p className="text-[10px] font-bold text-slate-500 uppercase mb-3">
+                {selectedSchoolAdmin ? 'Change Password (Optional)' : 'Set Password'}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    {selectedSchoolAdmin ? 'New Password' : 'Password'} {!selectedSchoolAdmin && '*'}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder={selectedSchoolAdmin ? 'Leave blank to keep current' : 'Enter password'}
+                      value={schoolAdminForm.password}
+                      onChange={(e) => setSchoolAdminForm({ ...schoolAdminForm, password: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-10"
+                      required={!selectedSchoolAdmin}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    >
+                      {showPassword ? <Lock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    Confirm Password {!selectedSchoolAdmin && '*'}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Confirm password"
+                      value={schoolAdminForm.confirm_password}
+                      onChange={(e) => setSchoolAdminForm({ ...schoolAdminForm, confirm_password: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-10"
+                      required={!selectedSchoolAdmin}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    >
+                      {showConfirmPassword ? <Lock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {selectedSchoolAdmin && (
+                <p className="text-[10px] text-slate-500 mt-2">
+                  💡 Leave password fields blank to keep the existing password unchanged.
+                </p>
+              )}
+            </div>
+
+            <div className="pt-4 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSchoolAdminModalOpen(false);
+                  setSelectedSchoolAdmin(null);
+                  setSchoolAdminForm({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    school_id: '',
+                    role: 'Admin',
+                    status: 'active',
+                    password: '',
+                    confirm_password: ''
+                  });
+                  setShowPassword(false);
+                  setShowConfirmPassword(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-600/20"
+              >
+                {selectedSchoolAdmin ? 'Update Admin' : 'Create Admin'}
               </button>
             </div>
           </form>

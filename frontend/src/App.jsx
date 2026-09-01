@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AuthCtx } from './context/AuthContext';
+import { Login } from './pages/Login';
 
 // ── Super Admin ──────────────────────────────────────────
 import { SuperAdminDashboard }    from './pages/superadmin/SuperAdminDashboard';
@@ -45,7 +46,13 @@ const SUPER_MENU = [
   {
     group: 'SaaS Administration',
     items: [
-      { id: 'superadmin', label: 'SaaS Platform Console' },
+      { id: 'dashboard', label: '📊 Dashboard Overview' },
+      { id: 'tenants', label: '🏢 Institutions Directory' },
+      { id: 'school_admins', label: '👥 School Admin Profiles' },
+      { id: 'plans', label: '💎 Subscription Plans' },
+      { id: 'sms_gateway', label: '📱 SMS Gateway & Credits' },
+      { id: 'analytics', label: '� Platform Financials' },
+      { id: 'system', label: '🛡️ System & Isolation' },
     ]
   }
 ];
@@ -55,14 +62,28 @@ const SUPER_MENU = [
 // ─────────────────────────────────────────────
 export default function App() {
   const [activeTab,   setActiveTab]   = useState('dashboard');
-  const [role,        setRole]        = useState('school_admin');
+  const [role,        setRole]        = useState(() => {
+    // Load role from localStorage on mount
+    const savedRole = localStorage.getItem('userRole');
+    return savedRole || 'school_admin';
+  });
   const [darkMode,    setDarkMode]    = useState(false);
   const [tenant,      setTenant]      = useState(DEMO_TENANTS[0]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Load authentication state from localStorage on mount
+    const savedAuth = localStorage.getItem('isAuthenticated');
+    return savedAuth === 'true';
+  });
+  const [user, setUser] = useState(() => {
+    // Load user data from localStorage on mount
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
   const switchRole = (newRole) => {
     setRole(newRole);
-    setActiveTab(newRole === 'super_admin' ? 'superadmin' : 'dashboard');
+    setActiveTab(newRole === 'super_admin' ? 'dashboard' : 'dashboard');
   };
 
   const toggleDark = () => {
@@ -70,10 +91,37 @@ export default function App() {
     setDarkMode(d => !d);
   };
 
+  const handleLogin = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+    if (userData.role === 'super_admin') {
+      setRole('super_admin');
+      setActiveTab('dashboard');
+    } else {
+      setRole('school_admin');
+      setActiveTab('dashboard');
+    }
+    // Save to localStorage
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('userRole', userData.role || 'school_admin');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    setRole('school_admin');
+    setActiveTab('dashboard');
+    // Clear from localStorage
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
+  };
+
   const menu = role === 'super_admin' ? SUPER_MENU : SCHOOL_MENU;
 
   const renderPage = () => {
-    if (role === 'super_admin' || activeTab === 'superadmin') return <SuperAdminDashboard />;
+    if (role === 'super_admin') return <SuperAdminDashboard />;
     switch (activeTab) {
       case 'dashboard':  return <DashboardOverview />;
       case 'academic':   return <AcademicManagement />;
@@ -104,8 +152,15 @@ export default function App() {
     activeTab,
     setActiveTab,
     selectedSession: '2026',
-    availableTenants: DEMO_TENANTS
+    availableTenants: DEMO_TENANTS,
+    user,
+    handleLogout
   };
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
     <AuthCtx.Provider value={ctxValue}>
@@ -178,6 +233,16 @@ export default function App() {
               aria-label="Toggle dark mode"
             >
               {darkMode ? '☀️' : '🌙'}
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold hover:bg-rose-100 transition-colors flex items-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Logout</span>
             </button>
           </div>
         </header>
