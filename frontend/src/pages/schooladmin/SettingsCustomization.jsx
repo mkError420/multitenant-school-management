@@ -1,29 +1,12 @@
 import React, { useState } from 'react';
-import { Badge, Modal } from '../../components/common/StatCard';
-import {
-  Settings,
-  School,
-  Shield,
-  Activity,
-  Upload,
-  Save,
-  Plus,
-  Trash2,
-  Eye,
-  EyeOff,
-  ToggleLeft,
-  ToggleRight,
-  Clock,
-  User,
-  Database
-} from 'lucide-react';
+import { Badge } from '../../components/common/StatCard';
+import { CheckCircle2, Database, Lock, Save, School, ShieldCheck, Sparkles, Upload } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
 
 export const SettingsCustomization = () => {
-  const { tenant, setTenant } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'roles' | 'audit'
+  const { tenant } = useAuthStore();
+  const [activeTab, setActiveTab] = useState('profile');
 
-  // School Profile
   const [schoolProfile, setSchoolProfile] = useState({
     name: tenant?.name || 'Mane School and College',
     short_name: tenant?.short_name || 'MANE',
@@ -37,77 +20,107 @@ export const SettingsCustomization = () => {
     domain: 'maneschool.site.je'
   });
 
-  // Roles & Permissions
   const [roles, setRoles] = useState([
     {
-      id: 1, name: 'Principal / School Admin', label: 'school_admin',
+      id: 1,
+      name: 'Principal / School Admin',
+      label: 'school_admin',
       permissions: { dashboard: true, students: true, attendance: true, exams: true, fees: true, hr: true, sms: true, settings: true, library: true, transport: true }
     },
     {
-      id: 2, name: 'Class Teacher', label: 'teacher',
+      id: 2,
+      name: 'Class Teacher',
+      label: 'teacher',
       permissions: { dashboard: true, students: true, attendance: true, exams: true, fees: false, hr: false, sms: false, settings: false, library: true, transport: false }
     },
     {
-      id: 3, name: 'Accountant (POS)', label: 'accountant',
+      id: 3,
+      name: 'Accountant (POS)',
+      label: 'accountant',
       permissions: { dashboard: true, students: false, attendance: false, exams: false, fees: true, hr: false, sms: false, settings: false, library: false, transport: false }
     }
   ]);
 
-  // Audit Logs
   const auditLogs = [
-    { id: 1, user: 'Prof. Kazi Faruq Ahmed (Principal)', action: 'Published Half-Yearly Exam Result for Class 10', module: 'Examination', time: '01 Mar 2026, 11:42 AM', ip: '192.168.1.5' },
-    { id: 2, user: 'Md. Shahinur Rahman (Accountant)', action: 'Collected Fee ৳3,100 from Tanvir Hasan (Roll 1)', module: 'Fees', time: '01 Mar 2026, 10:15 AM', ip: '192.168.1.12' },
-    { id: 3, user: 'System Auto', action: 'Sent 65 Absentee SMS alerts to guardians via GreenwebBD', module: 'Attendance / SMS', time: '01 Mar 2026, 08:05 AM', ip: 'API Gateway' },
-    { id: 4, user: 'Prof. Kazi Faruq Ahmed (Principal)', action: 'Approved 3-day medical leave for Nusrat Jahan', module: 'HR / Leaves', time: '28 Feb 2026, 03:45 PM', ip: '192.168.1.5' },
-    { id: 5, user: 'Mohammad Rafiqul Islam (Teacher)', action: 'Entered marks for General Mathematics - Class 10 (Science)', module: 'Examination', time: '28 Feb 2026, 01:30 PM', ip: '192.168.1.9' }
+    { id: 1, user: 'Prof. Kazi Faruq Ahmed', action: 'Published Half-Yearly Exam Result for Class 10', module: 'Examination', time: '01 Mar 2026, 11:42 AM', ip: '192.168.1.5' },
+    { id: 2, user: 'Md. Shahinur Rahman', action: 'Collected fee from Tanvir Hasan', module: 'Fees', time: '01 Mar 2026, 10:15 AM', ip: '192.168.1.12' },
+    { id: 3, user: 'System Auto', action: 'Sent 65 absentee SMS alerts to guardians', module: 'Attendance / SMS', time: '01 Mar 2026, 08:05 AM', ip: 'API Gateway' },
+    { id: 4, user: 'Prof. Kazi Faruq Ahmed', action: 'Approved 3-day medical leave for Nusrat Jahan', module: 'HR / Leaves', time: '28 Feb 2026, 03:45 PM', ip: '192.168.1.5' }
   ];
 
   const togglePermission = (roleId, perm) => {
-    setRoles(roles.map(r =>
-      r.id === roleId ? { ...r, permissions: { ...r.permissions, [perm]: !r.permissions[perm] } } : r
-    ));
+    setRoles((prev) => prev.map((role) => role.id === roleId ? { ...role, permissions: { ...role.permissions, [perm]: !role.permissions[perm] } } : role));
   };
 
   const permKeys = ['dashboard', 'students', 'attendance', 'exams', 'fees', 'hr', 'sms', 'settings', 'library', 'transport'];
   const permLabels = {
-    dashboard: '📊 Dashboard',
-    students: '👥 Students',
-    attendance: '📅 Attendance',
-    exams: '🎓 Exams',
-    fees: '💳 Fees',
-    hr: '💰 HR & Payroll',
-    sms: '📱 SMS Portal',
-    settings: '⚙️ Settings',
-    library: '📚 Library',
-    transport: '🚌 Transport'
+    dashboard: 'Dashboard',
+    students: 'Students',
+    attendance: 'Attendance',
+    exams: 'Exams',
+    fees: 'Fees',
+    hr: 'HR & Payroll',
+    sms: 'SMS Portal',
+    settings: 'Settings',
+    library: 'Library',
+    transport: 'Transport'
   };
+
+  const tabs = [
+    { id: 'profile', label: 'Profile' },
+    { id: 'roles', label: 'Roles' },
+    { id: 'audit', label: 'Audit log' }
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Settings, Roles, Permissions & Audit Logs
-          </h2>
-          <p className="text-xs text-slate-500">
-            Customize institution profile, branding, role-based access control, and track all administrative activity
-          </p>
+      <div className="rounded-[28px] border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-zinc-900 p-6 text-white shadow-xl">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-200">
+              <School className="h-3.5 w-3.5" />
+              System control
+            </div>
+            <h2 className="text-2xl font-black tracking-tight">School settings</h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-200/80">
+              Branding, permission controls, and audit trail management for the institution.
+            </p>
+          </div>
+
+          <button className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-900">
+            <Sparkles className="h-4 w-4" />
+            Save profile
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold">
-          {[
-            { id: 'profile', label: '🏫 School Profile & Branding' },
-            { id: 'roles', label: '🔐 Roles & Permissions' },
-            { id: 'audit', label: '🔍 Audit Activity Logs' }
-          ].map((tab) => (
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { title: 'School profile', value: '100%', icon: School, tone: 'emerald', note: 'Configured' },
+          { title: 'Access roles', value: '3', icon: Lock, tone: 'blue', note: 'Defined roles' },
+          { title: 'Audit events', value: '1,240', icon: Database, tone: 'violet', note: 'Tracked records' },
+          { title: 'Security', value: 'Secure', icon: ShieldCheck, tone: 'amber', note: 'Activity monitored' }
+        ].map(({ title, value, icon: Icon, tone, note }) => (
+          <div key={title} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{title}</p>
+              <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${tone === 'emerald' ? 'bg-emerald-100 text-emerald-600' : tone === 'blue' ? 'bg-sky-100 text-sky-600' : tone === 'violet' ? 'bg-violet-100 text-violet-600' : 'bg-amber-100 text-amber-600'}`}>
+                <Icon className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="mt-5 text-2xl font-black text-slate-900 dark:text-white">{value}</p>
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{note}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                activeTab === tab.id
-                  ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
+              className={`rounded-xl px-3 py-2 text-xs font-bold transition ${activeTab === tab.id ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}`}
             >
               {tab.label}
             </button>
@@ -115,174 +128,89 @@ export const SettingsCustomization = () => {
         </div>
       </div>
 
-      {/* 1. SCHOOL PROFILE & BRANDING */}
       {activeTab === 'profile' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
-          <div className="flex justify-between items-center pb-3 border-b">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="font-extrabold text-sm">Institution Profile & Branding Configuration</h3>
-              <p className="text-xs text-slate-500">Customize school name, EIIN, logo, principal signature, and UI theme color</p>
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Institution profile</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Customize school identity and branding</p>
             </div>
-            <button
-              onClick={() => alert('Profile saved successfully!')}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow"
-            >
-              <Save className="w-3.5 h-3.5" />
-              Save Changes
-            </button>
+            <button className="rounded-xl bg-emerald-600 px-3.5 py-2 text-[10px] font-bold text-white">Save changes</button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label className="font-bold block mb-1">Institution Full Name</label>
-              <input
-                value={schoolProfile.name}
-                onChange={(e) => setSchoolProfile({ ...schoolProfile, name: e.target.value })}
-                className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800 font-bold"
-              />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+              <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">School name</label>
+              <input value={schoolProfile.name} onChange={(e) => setSchoolProfile({ ...schoolProfile, name: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white" />
             </div>
-            <div>
-              <label className="font-bold block mb-1">Short Name / Abbreviation</label>
-              <input
-                value={schoolProfile.short_name}
-                onChange={(e) => setSchoolProfile({ ...schoolProfile, short_name: e.target.value })}
-                className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800 font-bold"
-              />
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+              <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Short name</label>
+              <input value={schoolProfile.short_name} onChange={(e) => setSchoolProfile({ ...schoolProfile, short_name: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white" />
             </div>
-            <div>
-              <label className="font-bold block mb-1">EIIN Number (Education Board)</label>
-              <input
-                value={schoolProfile.eiin}
-                onChange={(e) => setSchoolProfile({ ...schoolProfile, eiin: e.target.value })}
-                className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800 font-mono font-bold"
-              />
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+              <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">EIIN</label>
+              <input value={schoolProfile.eiin} onChange={(e) => setSchoolProfile({ ...schoolProfile, eiin: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white" />
             </div>
-            <div>
-              <label className="font-bold block mb-1">Education Board</label>
-              <select
-                value={schoolProfile.board}
-                onChange={(e) => setSchoolProfile({ ...schoolProfile, board: e.target.value })}
-                className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800"
-              >
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+              <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Board</label>
+              <select value={schoolProfile.board} onChange={(e) => setSchoolProfile({ ...schoolProfile, board: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
                 <option>Dhaka</option>
                 <option>Rajshahi</option>
                 <option>Chittagong</option>
                 <option>Sylhet</option>
-                <option>Barisal</option>
-                <option>Jessore</option>
-                <option>Comilla</option>
-                <option>Mymensingh</option>
-                <option>Dinajpur</option>
               </select>
             </div>
-            <div>
-              <label className="font-bold block mb-1">Principal / Headmaster Name</label>
-              <input
-                value={schoolProfile.principal_name}
-                onChange={(e) => setSchoolProfile({ ...schoolProfile, principal_name: e.target.value })}
-                className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800"
-              />
-            </div>
-            <div>
-              <label className="font-bold block mb-1">Live Domain (maneschool.site.je)</label>
-              <input
-                value={schoolProfile.domain}
-                disabled
-                className="w-full p-2.5 rounded-xl border bg-slate-100 dark:bg-slate-900 font-mono text-slate-400 cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="font-bold block mb-1">Institution Theme Color</label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="color"
-                  value={schoolProfile.theme_color}
-                  onChange={(e) => setSchoolProfile({ ...schoolProfile, theme_color: e.target.value })}
-                  className="w-12 h-10 rounded-lg border cursor-pointer"
-                />
-                <span className="font-mono font-bold text-slate-700 dark:text-slate-200">{schoolProfile.theme_color}</span>
-              </div>
-            </div>
-            <div>
-              <label className="font-bold block mb-1">Official Phone</label>
-              <input
-                value={schoolProfile.phone}
-                onChange={(e) => setSchoolProfile({ ...schoolProfile, phone: e.target.value })}
-                className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800 font-mono"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="font-bold block mb-1">Registered Address</label>
-              <textarea
-                rows={2}
-                value={schoolProfile.address}
-                onChange={(e) => setSchoolProfile({ ...schoolProfile, address: e.target.value })}
-                className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800"
-              />
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2 dark:border-slate-700 dark:bg-slate-800/60">
+              <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Registered address</label>
+              <textarea rows={3} value={schoolProfile.address} onChange={(e) => setSchoolProfile({ ...schoolProfile, address: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white" />
             </div>
           </div>
 
-          {/* Logo Upload */}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-            <h4 className="font-bold text-xs mb-3">Institution Logo & Principal Signature Upload</h4>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-40 p-4 border-2 border-dashed border-slate-300 rounded-2xl text-center space-y-2 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all">
-                <Upload className="w-8 h-8 mx-auto text-slate-400" />
-                <p className="text-xs font-bold text-slate-500">Upload School Logo (PNG/SVG)</p>
-              </div>
-              <div className="flex-1 min-w-40 p-4 border-2 border-dashed border-slate-300 rounded-2xl text-center space-y-2 cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-all">
-                <Upload className="w-8 h-8 mx-auto text-slate-400" />
-                <p className="text-xs font-bold text-slate-500">Upload Principal Signature (PNG)</p>
-                <p className="text-[10px] text-slate-400">Used on ID Cards & Certificates</p>
-              </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-center dark:border-slate-700">
+              <Upload className="mx-auto h-8 w-8 text-slate-400" />
+              <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Upload school logo</p>
+            </div>
+            <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-center dark:border-slate-700">
+              <Upload className="mx-auto h-8 w-8 text-slate-400" />
+              <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Upload principal signature</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* 2. ROLES & PERMISSIONS */}
       {activeTab === 'roles' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
-          <div className="flex justify-between items-center pb-3 border-b">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="font-extrabold text-sm">Role-Based Access Control (RBAC) Permission Matrix</h3>
-              <p className="text-xs text-slate-500">Toggle on/off which modules each role can access</p>
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Permissions</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Role-based access matrix</p>
             </div>
-            <button onClick={() => alert('Custom role creation modal')} className="px-3 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow">
-              + Create Custom Role
-            </button>
+            <button className="rounded-xl bg-indigo-600 px-3.5 py-2 text-[10px] font-bold text-white">+ New role</button>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-800 font-bold text-[10px] uppercase border-b">
+            <table className="min-w-full text-left text-xs">
+              <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                 <tr>
-                  <th className="p-3 text-left">Module / Feature</th>
-                  {roles.map(r => (
-                    <th key={r.id} className="p-3 text-center">
-                      <div className="space-y-0.5">
-                        <p className="font-extrabold text-slate-900 dark:text-white">{r.name}</p>
-                        <p className="text-[9px] text-slate-400 font-mono normal-case">[{r.label}]</p>
-                      </div>
-                    </th>
+                  <th className="px-3 py-3">Module</th>
+                  {roles.map((role) => (
+                    <th key={role.id} className="px-3 py-3 text-center">{role.name}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y font-medium">
-                {permKeys.map((perm) => (
-                  <tr key={perm} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                    <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{permLabels[perm]}</td>
-                    {roles.map(r => (
-                      <td key={r.id} className="p-3 text-center">
-                        <button
-                          onClick={() => togglePermission(r.id, perm)}
-                          className={`w-10 h-5 rounded-full transition-all duration-200 relative ${
-                            r.permissions[perm] ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
-                          }`}
-                        >
-                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${
-                            r.permissions[perm] ? 'left-5' : 'left-0.5'
-                          }`}></span>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                {permKeys.map((key) => (
+                  <tr key={key} className="bg-white dark:bg-slate-900">
+                    <td className="px-3 py-3 font-bold text-slate-900 dark:text-white">{permLabels[key]}</td>
+                    {roles.map((role) => (
+                      <td key={`${role.id}-${key}`} className="px-3 py-3 text-center">
+                        <button onClick={() => togglePermission(role.id, key)} className={`relative h-6 w-11 rounded-full transition ${role.permissions[key] ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                          <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${role.permissions[key] ? 'left-6' : 'left-1'}`} />
                         </button>
                       </td>
                     ))}
@@ -294,31 +222,30 @@ export const SettingsCustomization = () => {
         </div>
       )}
 
-      {/* 3. AUDIT ACTIVITY LOGS */}
       {activeTab === 'audit' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="font-extrabold text-sm">Administrative Activity & Audit Trail Logs</h3>
-              <p className="text-xs text-slate-500">Complete chronological record of who changed what data in the system</p>
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Audit trail</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Administrator action history</p>
             </div>
-            <button
-              onClick={() => window.print()}
-              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 font-bold text-xs rounded-xl hover:bg-slate-200"
-            >
-              🖨️ Export Log Report
-            </button>
+            <button className="rounded-xl bg-slate-100 px-3.5 py-2 text-[10px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">Export logs</button>
           </div>
 
-          <div className="space-y-2 text-xs">
+          <div className="space-y-3">
             {auditLogs.map((log) => (
-              <div key={log.id} className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start gap-2">
-                <div className="space-y-0.5 flex-1">
-                  <p className="font-extrabold text-slate-900 dark:text-white">{log.user}</p>
-                  <p className="text-slate-600 dark:text-slate-300">{log.action}</p>
-                  <p className="text-[10px] text-slate-400">Module: <strong>{log.module}</strong> • IP: <span className="font-mono">{log.ip}</span></p>
+              <div key={log.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-slate-900 dark:text-white">{log.user}</p>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{log.action}</p>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">{log.time}</span>
                 </div>
-                <span className="text-[10px] text-slate-400 whitespace-nowrap font-mono">{log.time}</span>
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
+                  <Badge variant="default">{log.module}</Badge>
+                  <span className="font-mono">IP: {log.ip}</span>
+                </div>
               </div>
             ))}
           </div>

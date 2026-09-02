@@ -1,29 +1,25 @@
 import React, { useState } from 'react';
-import { Badge, Modal } from '../../components/common/StatCard';
+import { Badge, StatCard } from '../../components/common/StatCard';
 import { IDCardGenerator } from '../../components/printables/IDCardGenerator';
 import {
   Users,
   Search,
   UserPlus,
   Contact2,
-  FileSpreadsheet,
   Upload,
-  ArrowRightCircle,
-  FileText,
-  Printer,
-  CheckCircle2,
-  Award
+  Award,
+  School,
+  Sparkles
 } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
 
 export const StudentManagement = () => {
   const { tenant, selectedSession } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('directory'); // 'directory' | 'admission' | 'id_cards' | 'promotion' | 'certificates'
+  const [activeTab, setActiveTab] = useState('directory');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
   const [selectedStudentForID, setSelectedStudentForID] = useState(null);
-  const [selectedCertificateType, setSelectedCertificateType] = useState('tc'); // 'tc' | 'testimonial' | 'character'
-  const [certificateStudent, setCertificateStudent] = useState(null);
+  const [selectedCertificateType, setSelectedCertificateType] = useState('tc');
 
   const [students, setStudents] = useState([
     {
@@ -33,7 +29,6 @@ export const StudentManagement = () => {
       name_en: 'Tanvir Hasan',
       name_bn: 'তানভীর হাসান',
       class_name: 'Class 10 (SSC)',
-      class_id: 5,
       section_name: 'Padma (Morning)',
       group_name: 'Science',
       gender: 'Male',
@@ -55,7 +50,6 @@ export const StudentManagement = () => {
       name_en: 'Sadia Afrin',
       name_bn: 'সাদিয়া আফরিন',
       class_name: 'Class 10 (SSC)',
-      class_id: 5,
       section_name: 'Padma (Morning)',
       group_name: 'Science',
       gender: 'Female',
@@ -77,7 +71,6 @@ export const StudentManagement = () => {
       name_en: 'Arafat Rahman',
       name_bn: 'আরাফাত রহমান',
       class_name: 'Class 10 (SSC)',
-      class_id: 5,
       section_name: 'Padma (Morning)',
       group_name: 'Science',
       gender: 'Male',
@@ -99,7 +92,6 @@ export const StudentManagement = () => {
       name_en: 'Farzana Akter',
       name_bn: 'ফারজানা আক্তার',
       class_name: 'Class 10 (SSC)',
-      class_id: 5,
       section_name: 'Padma (Morning)',
       group_name: 'Science',
       gender: 'Female',
@@ -136,7 +128,7 @@ export const StudentManagement = () => {
     const created = {
       id: students.length + 1,
       admission_no: `ADM-2026-${1000 + students.length + 1}`,
-      roll_no: parseInt(newStudent.roll_no) || (students.length + 1),
+      roll_no: parseInt(newStudent.roll_no) || students.length + 1,
       name_en: newStudent.name_en,
       name_bn: newStudent.name_bn || newStudent.name_en,
       class_name: newStudent.class_name,
@@ -154,26 +146,54 @@ export const StudentManagement = () => {
       gpa_last_term: '0.00',
       promotion_status: 'eligible'
     };
-    setStudents([...students, created]);
+
+    setStudents((prev) => [...prev, created]);
     alert(`Student "${created.name_en}" admitted successfully with Roll #${created.roll_no}!`);
     setActiveTab('directory');
   };
 
+  const filteredStudents = students.filter((student) => {
+    const matchesSearch =
+      searchTerm === '' ||
+      student.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.father_phone.includes(searchTerm) ||
+      String(student.roll_no).includes(searchTerm);
+
+    const matchesClass = selectedClass === 'all' || student.class_name === selectedClass;
+    return matchesSearch && matchesClass;
+  });
+
   return (
     <div className="space-y-6">
-      {/* Module Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Student Management & Digital Registry
-          </h2>
-          <p className="text-xs text-slate-500">
-            Admissions, Auto-Roll, Dual-Sided ID Cards, End-of-Year Promotion Engine, TC & Certificates
-          </p>
-        </div>
+      <div className="rounded-[28px] border border-emerald-200 bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 p-6 text-white shadow-xl">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100">
+              <School className="h-3.5 w-3.5" />
+              Student registry
+            </div>
+            <h2 className="text-2xl font-black tracking-tight">Student Management & Digital Registry</h2>
+            <p className="mt-2 max-w-2xl text-sm text-emerald-100/80">
+              Admissions, directory management, promotion engine, and document generation for the active session.
+            </p>
+          </div>
 
-        {/* Subtabs */}
-        <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold">
+          <button className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-emerald-900">
+            <Sparkles className="h-4 w-4" />
+            New student flow
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Active students" value="1,250" icon={Users} color="emerald" subtext="Live registry" />
+        <StatCard title="Admissions" value="86" icon={UserPlus} color="blue" subtext="This term" />
+        <StatCard title="ID cards" value="2" icon={Contact2} color="violet" subtext="Ready to print" />
+        <StatCard title="Promotions" value="96%" icon={Award} color="amber" subtext="Eligible" />
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap gap-2">
           {[
             { id: 'directory', label: '👥 Student Directory' },
             { id: 'admission', label: '📝 New Admission Form' },
@@ -184,10 +204,10 @@ export const StudentManagement = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
                 activeTab === tab.id
-                  ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-emerald-600 text-white shadow'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
               }`}
             >
               {tab.label}
@@ -196,106 +216,133 @@ export const StudentManagement = () => {
         </div>
       </div>
 
-      {/* 1. DIRECTORY SUBTAB */}
       {activeTab === 'directory' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div className="flex gap-2">
               <select
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-800"
               >
                 <option value="all">All Classes</option>
-                <option value="10">Class 10 (SSC Candidate)</option>
-                <option value="9">Class 9</option>
-                <option value="8">Class 8</option>
+                <option value="Class 10 (SSC)">Class 10 (SSC Candidate)</option>
+                <option value="Class 9">Class 9</option>
+                <option value="Class 8">Class 8</option>
               </select>
             </div>
 
             <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search roll, name, phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-4 text-xs dark:border-slate-700 dark:bg-slate-800"
               />
             </div>
           </div>
 
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 font-bold uppercase text-[10px] border-b">
-              <tr>
-                <th className="p-3">Roll</th>
-                <th className="p-3">Student Name</th>
-                <th className="p-3">Class & Section</th>
-                <th className="p-3">Guardian & Phone</th>
-                <th className="p-3">Blood</th>
-                <th className="p-3">Fee Status</th>
-                <th className="p-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y font-medium">
-              {students.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                  <td className="p-3 font-extrabold text-sm">{s.roll_no < 10 ? `0${s.roll_no}` : s.roll_no}</td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <img src={s.photo_url} className="w-8 h-8 rounded-lg object-cover ring-1 ring-emerald-500" />
-                      <div>
-                        <p className="font-bold">{s.name_en}</p>
-                        <p className="text-[10px] text-emerald-600 font-bengali">{s.name_bn}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3">{s.class_name} • <span className="text-slate-400">{s.section_name}</span></td>
-                  <td className="p-3">{s.father_name} • <span className="font-mono text-emerald-600">{s.father_phone}</span></td>
-                  <td className="p-3"><span className="text-rose-600 font-bold bg-rose-50 dark:bg-rose-950 px-1.5 py-0.5 rounded">{s.blood_group}</span></td>
-                  <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s.fee_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                      {s.fee_status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="p-3 text-right">
-                    <button onClick={() => setSelectedStudentForID(s)} className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold rounded-lg hover:bg-emerald-100">
-                      🪪 ID Card
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-xs">
+              <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <tr>
+                  <th className="p-3">Roll</th>
+                  <th className="p-3">Student Name</th>
+                  <th className="p-3">Class & Section</th>
+                  <th className="p-3">Guardian & Phone</th>
+                  <th className="p-3">Blood</th>
+                  <th className="p-3">Fee Status</th>
+                  <th className="p-3 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                {filteredStudents.map((s) => (
+                  <tr key={s.id} className="bg-white dark:bg-slate-900">
+                    <td className="p-3 text-sm font-extrabold text-slate-900 dark:text-white">{s.roll_no < 10 ? `0${s.roll_no}` : s.roll_no}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <img src={s.photo_url} alt={s.name_en} className="h-8 w-8 rounded-lg object-cover ring-1 ring-emerald-500" />
+                        <div>
+                          <p className="font-bold text-slate-900 dark:text-white">{s.name_en}</p>
+                          <p className="text-[10px] font-bengali text-emerald-600">{s.name_bn}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      {s.class_name} • <span className="text-slate-400">{s.section_name}</span>
+                    </td>
+                    <td className="p-3">
+                      {s.father_name} • <span className="font-mono text-emerald-600">{s.father_phone}</span>
+                    </td>
+                    <td className="p-3">
+                      <span className="rounded bg-rose-50 px-1.5 py-0.5 font-bold text-rose-600 dark:bg-rose-950">{s.blood_group}</span>
+                    </td>
+                    <td className="p-3">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${s.fee_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                        {s.fee_status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => setSelectedStudentForID(s)}
+                        className="rounded-lg bg-emerald-50 px-2.5 py-1 font-bold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300"
+                      >
+                        🪪 ID Card
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* 2. ADMISSION FORM SUBTAB */}
       {activeTab === 'admission' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-700">
             <div>
-              <h3 className="font-extrabold text-sm">Student Admission & Registration (ভর্তি ফরম)</h3>
-              <p className="text-xs text-slate-500">Auto-assigns next Roll Number and Admission Registry ID</p>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">Student admission & registration</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Auto-assigns next roll number and admission registry ID</p>
             </div>
-            <button onClick={() => alert('Bulk Student CSV Import sample downloaded!')} className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl hover:bg-slate-200">
-              <Upload className="w-3.5 h-3.5" />
-              <span>Bulk CSV Import</span>
+            <button
+              onClick={() => alert('Bulk Student CSV Import sample downloaded!')}
+              className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-1.5 text-[10px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              Bulk CSV Import
             </button>
           </div>
 
-          <form onSubmit={handleAdmissionSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <form onSubmit={handleAdmissionSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2 text-xs">
             <div>
-              <label className="font-bold block mb-1">Student Full Name (English) *</label>
-              <input required value={newStudent.name_en} onChange={e => setNewStudent({...newStudent, name_en: e.target.value})} placeholder="e.g. Mahir Faisal" className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800" />
+              <label className="mb-1 block font-bold">Student Full Name (English) *</label>
+              <input
+                required
+                value={newStudent.name_en}
+                onChange={(e) => setNewStudent({ ...newStudent, name_en: e.target.value })}
+                placeholder="e.g. Mahir Faisal"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800"
+              />
             </div>
             <div>
-              <label className="font-bold block mb-1">Student Name (বাংলায়)</label>
-              <input value={newStudent.name_bn} onChange={e => setNewStudent({...newStudent, name_bn: e.target.value})} placeholder="e.g. মাহির ফয়সাল" className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800 font-bengali" />
+              <label className="mb-1 block font-bold">Student Name (বাংলায়)</label>
+              <input
+                value={newStudent.name_bn}
+                onChange={(e) => setNewStudent({ ...newStudent, name_bn: e.target.value })}
+                placeholder="e.g. মাহির ফয়সাল"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 font-bengali dark:border-slate-700 dark:bg-slate-800"
+              />
             </div>
             <div>
-              <label className="font-bold block mb-1">Class & Shift *</label>
-              <select value={newStudent.class_name} onChange={e => setNewStudent({...newStudent, class_name: e.target.value})} className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800">
+              <label className="mb-1 block font-bold">Class & Shift *</label>
+              <select
+                value={newStudent.class_name}
+                onChange={(e) => setNewStudent({ ...newStudent, class_name: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800"
+              >
                 <option value="Class 6">Class 6 (Six)</option>
                 <option value="Class 7">Class 7 (Seven)</option>
                 <option value="Class 8">Class 8 (Eight)</option>
@@ -305,19 +352,36 @@ export const StudentManagement = () => {
               </select>
             </div>
             <div>
-              <label className="font-bold block mb-1">Assigned Roll Number *</label>
-              <input required value={newStudent.roll_no} onChange={e => setNewStudent({...newStudent, roll_no: e.target.value})} className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800 font-bold" />
+              <label className="mb-1 block font-bold">Assigned Roll Number *</label>
+              <input
+                required
+                value={newStudent.roll_no}
+                onChange={(e) => setNewStudent({ ...newStudent, roll_no: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 font-bold dark:border-slate-700 dark:bg-slate-800"
+              />
             </div>
             <div>
-              <label className="font-bold block mb-1">Father / Guardian Name *</label>
-              <input required value={newStudent.father_name} onChange={e => setNewStudent({...newStudent, father_name: e.target.value})} placeholder="e.g. Abdur Razzaq" className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800" />
+              <label className="mb-1 block font-bold">Father / Guardian Name *</label>
+              <input
+                required
+                value={newStudent.father_name}
+                onChange={(e) => setNewStudent({ ...newStudent, father_name: e.target.value })}
+                placeholder="e.g. Abdur Razzaq"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800"
+              />
             </div>
             <div>
-              <label className="font-bold block mb-1">Guardian Mobile (for SMS alerts) *</label>
-              <input required value={newStudent.father_phone} onChange={e => setNewStudent({...newStudent, father_phone: e.target.value})} placeholder="+8801711000000" className="w-full p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800 font-mono" />
+              <label className="mb-1 block font-bold">Guardian Mobile (for SMS alerts) *</label>
+              <input
+                required
+                value={newStudent.father_phone}
+                onChange={(e) => setNewStudent({ ...newStudent, father_phone: e.target.value })}
+                placeholder="+8801711000000"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 font-mono dark:border-slate-700 dark:bg-slate-800"
+              />
             </div>
-            <div className="md:col-span-2 pt-2 flex justify-end">
-              <button type="submit" className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
+            <div className="md:col-span-2 flex justify-end pt-2">
+              <button type="submit" className="rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow">
                 Save & Admit Student
               </button>
             </div>
@@ -325,34 +389,35 @@ export const StudentManagement = () => {
         </div>
       )}
 
-      {/* 3. ID CARD GENERATOR SUBTAB */}
       {activeTab === 'id_cards' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-700">
             <div>
-              <h3 className="font-extrabold text-sm">Dual-Sided Student ID Card Generator (PVC CR80 & A4 Sheet)</h3>
-              <p className="text-xs text-slate-500">Includes Institution Crest, Barcode, Blood Group, and Principal Signature</p>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">Dual-sided student ID card generator</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Includes institution crest, barcode, blood group, and principal signature</p>
             </div>
-            <button onClick={() => window.print()} className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow">
-              🖨️ Bulk Print All ID Cards
+            <button onClick={() => window.print()} className="rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold text-white">
+              🖨️ Bulk print all ID cards
             </button>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-6 p-4 bg-slate-100 dark:bg-slate-950 rounded-2xl">
+          <div className="flex flex-wrap justify-center gap-6 rounded-2xl bg-slate-100 p-4 dark:bg-slate-950">
             {students.slice(0, 2).map((stu) => (
-              <div key={stu.id} className="w-56 h-80 bg-white text-slate-900 border-2 border-emerald-600 rounded-xl overflow-hidden text-center flex flex-col justify-between p-3 shadow-lg">
-                <div className="bg-emerald-700 text-white py-1 rounded">
-                  <p className="font-bold text-[10px] uppercase">{tenant?.name || 'MANE COLLEGE'}</p>
+              <div key={stu.id} className="flex h-80 w-56 flex-col justify-between overflow-hidden rounded-xl border-2 border-emerald-600 bg-white p-3 text-center text-slate-900 shadow-lg">
+                <div className="rounded bg-emerald-700 py-1 text-white">
+                  <p className="text-[10px] font-bold uppercase">{tenant?.name || 'MANE COLLEGE'}</p>
                   <p className="text-[8px]">Session {selectedSession}</p>
                 </div>
                 <div>
-                  <img src={stu.photo_url} className="w-16 h-16 rounded-full mx-auto object-cover ring-2 ring-emerald-500 mb-1" />
-                  <h4 className="font-bold text-xs">{stu.name_en}</h4>
-                  <p className="text-[10px] text-emerald-700 font-bengali">{stu.name_bn}</p>
-                  <p className="text-[9px] text-slate-500 mt-1">Roll: <strong>{stu.roll_no}</strong> • {stu.class_name}</p>
-                  <p className="text-[9px] text-rose-600 font-bold">Blood: {stu.blood_group}</p>
+                  <img src={stu.photo_url} alt={stu.name_en} className="mx-auto mb-1 h-16 w-16 rounded-full object-cover ring-2 ring-emerald-500" />
+                  <h4 className="text-xs font-bold">{stu.name_en}</h4>
+                  <p className="text-[10px] font-bengali text-emerald-700">{stu.name_bn}</p>
+                  <p className="mt-1 text-[9px] text-slate-500">
+                    Roll: <strong>{stu.roll_no}</strong> • {stu.class_name}
+                  </p>
+                  <p className="text-[9px] font-bold text-rose-600">Blood: {stu.blood_group}</p>
                 </div>
-                <div className="bg-emerald-800 text-white text-[8px] py-0.5 rounded font-mono font-bold">
+                <div className="rounded bg-emerald-800 py-0.5 text-[8px] font-mono font-bold text-white">
                   {stu.admission_no}
                 </div>
               </div>
@@ -361,89 +426,96 @@ export const StudentManagement = () => {
         </div>
       )}
 
-      {/* 4. PROMOTION ENGINE SUBTAB */}
       {activeTab === 'promotion' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-700">
             <div>
-              <h3 className="font-extrabold text-sm">End-of-Year Student Promotion Engine</h3>
-              <p className="text-xs text-slate-500">Promote students from Class 9 to Class 10 based on GPA 5.0 Pass/Fail criteria</p>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">End-of-year student promotion engine</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Promote students from Class 9 to Class 10 based on GPA 5.0 pass/fail criteria</p>
             </div>
-            <button onClick={() => alert('Batch promotion executed for Session 2027!')} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow">
-              🚀 Execute Promotion to Session 2027
+            <button onClick={() => alert('Batch promotion executed for Session 2027!')} className="rounded-xl bg-indigo-600 px-4 py-2 text-[10px] font-bold text-white">
+              🚀 Execute promotion to Session 2027
             </button>
           </div>
 
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800 font-bold uppercase text-[10px] border-b">
-              <tr>
-                <th className="p-3">Current Roll</th>
-                <th className="p-3">Student Name</th>
-                <th className="p-3">Current Class</th>
-                <th className="p-3">Annual GPA</th>
-                <th className="p-3">Next Class (Session 2027)</th>
-                <th className="p-3">Promotion Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y font-medium">
-              {students.map(s => (
-                <tr key={s.id}>
-                  <td className="p-3 font-bold">{s.roll_no}</td>
-                  <td className="p-3 font-bold">{s.name_en}</td>
-                  <td className="p-3">Class 9 (Nine)</td>
-                  <td className="p-3 font-black text-emerald-600">{s.gpa_last_term}</td>
-                  <td className="p-3 font-bold text-slate-900 dark:text-white">Class 10 (Ten)</td>
-                  <td className="p-3"><Badge variant="success">Eligible for Promotion</Badge></td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-xs">
+              <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <tr>
+                  <th className="p-3">Current Roll</th>
+                  <th className="p-3">Student Name</th>
+                  <th className="p-3">Current Class</th>
+                  <th className="p-3">Annual GPA</th>
+                  <th className="p-3">Next Class</th>
+                  <th className="p-3">Promotion Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                {students.map((s) => (
+                  <tr key={s.id} className="bg-white dark:bg-slate-900">
+                    <td className="p-3 font-bold text-slate-900 dark:text-white">{s.roll_no}</td>
+                    <td className="p-3 font-bold text-slate-900 dark:text-white">{s.name_en}</td>
+                    <td className="p-3">Class 9 (Nine)</td>
+                    <td className="p-3 font-black text-emerald-600">{s.gpa_last_term}</td>
+                    <td className="p-3 font-bold">Class 10 (Ten)</td>
+                    <td className="p-3">
+                      <Badge variant="success">Eligible for Promotion</Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* 5. DOCUMENTS & CERTIFICATES SUBTAB */}
       {activeTab === 'certificates' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-700">
             <div>
-              <h3 className="font-extrabold text-sm">Official Academic Certificates Generator</h3>
-              <p className="text-xs text-slate-500">Generate Transfer Certificates (TC), Testimonials, and Character Certificates</p>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">Official academic certificates generator</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Generate Transfer Certificates (TC), Testimonials, and Character Certificates</p>
             </div>
             <div className="flex gap-2 text-xs">
-              <button onClick={() => setSelectedCertificateType('tc')} className={`px-3 py-1.5 rounded-lg font-bold ${selectedCertificateType === 'tc' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}`}>
+              <button
+                onClick={() => setSelectedCertificateType('tc')}
+                className={`rounded-lg px-3 py-1.5 font-bold ${selectedCertificateType === 'tc' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}`}
+              >
                 Transfer Certificate (TC)
               </button>
-              <button onClick={() => setSelectedCertificateType('testimonial')} className={`px-3 py-1.5 rounded-lg font-bold ${selectedCertificateType === 'testimonial' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}`}>
+              <button
+                onClick={() => setSelectedCertificateType('testimonial')}
+                className={`rounded-lg px-3 py-1.5 font-bold ${selectedCertificateType === 'testimonial' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}`}
+              >
                 Testimonial (প্রশংসাপত্র)
               </button>
             </div>
           </div>
 
-          {/* Certificate Template Preview */}
-          <div className="p-8 border-4 border-double border-slate-400 bg-white text-slate-900 rounded-xl space-y-4 text-center max-w-2xl mx-auto shadow-sm">
-            <h3 className="font-extrabold text-lg uppercase">{tenant?.name || 'Mane School and College'}</h3>
+          <div className="mx-auto max-w-2xl rounded-xl border-4 border-double border-slate-400 bg-white p-8 text-center text-slate-900 shadow-sm">
+            <h3 className="text-lg font-extrabold uppercase">{tenant?.name || 'Mane School and College'}</h3>
             <p className="text-xs text-slate-600">EIIN: {tenant?.eiin || '107985'} • Dhaka Board</p>
-            <div className="inline-block px-4 py-1 bg-emerald-700 text-white font-black text-xs uppercase rounded-full">
+            <div className="mt-4 inline-block rounded-full bg-emerald-700 px-4 py-1 text-xs font-black uppercase text-white">
               {selectedCertificateType === 'tc' ? 'TRANSFER CERTIFICATE (ছাড়পত্র)' : 'ACADEMIC TESTIMONIAL (প্রশংসাপত্র)'}
             </div>
 
-            <p className="text-xs leading-relaxed text-slate-700 text-justify pt-4">
+            <p className="pt-4 text-justify text-xs leading-relaxed text-slate-700">
               This is to certify that <strong>Tanvir Hasan</strong>, Son of <strong>Md. Kamrul Hasan</strong>, was a student of Class 10 (Science Section). He has cleared all institutional dues and his conduct has been satisfactory during his stay at this college.
             </p>
 
-            <div className="pt-8 flex justify-between items-end text-xs">
+            <div className="flex items-end justify-between pt-8 text-xs">
               <div>
-                <p className="font-mono text-[10px]">Date: 01-03-2026</p>
+                <p className="text-[10px] font-mono">Date: 01-03-2026</p>
               </div>
               <div className="text-center">
-                <p className="font-serif italic font-bold text-emerald-800">Kazi Faruq Ahmed</p>
-                <div className="w-28 h-px bg-slate-400 mx-auto"></div>
-                <span className="text-[10px] font-bold uppercase block mt-0.5">Principal / Headmaster</span>
+                <p className="font-serif text-emerald-800 font-bold italic">Kazi Faruq Ahmed</p>
+                <div className="mx-auto mt-1 h-px w-28 bg-slate-400"></div>
+                <span className="mt-0.5 block text-[10px] font-bold uppercase">Principal / Headmaster</span>
               </div>
             </div>
 
-            <div className="pt-2 no-print flex justify-center">
-              <button onClick={() => window.print()} className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow">
+            <div className="no-print flex justify-center pt-2">
+              <button onClick={() => window.print()} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white">
                 🖨️ Print Certificate
               </button>
             </div>
@@ -451,13 +523,7 @@ export const StudentManagement = () => {
         </div>
       )}
 
-      {/* ID Card Modal */}
-      {selectedStudentForID && (
-        <IDCardGenerator
-          student={selectedStudentForID}
-          onClose={() => setSelectedStudentForID(null)}
-        />
-      )}
+      {selectedStudentForID && <IDCardGenerator student={selectedStudentForID} onClose={() => setSelectedStudentForID(null)} />}
     </div>
   );
 };

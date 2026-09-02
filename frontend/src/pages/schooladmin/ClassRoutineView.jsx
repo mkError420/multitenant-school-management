@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Calendar, Users, MapPin } from 'lucide-react';
+import { Clock, Calendar, Users, MapPin, School, Sparkles } from 'lucide-react';
 
 export const ClassRoutineView = () => {
   const [selectedClass, setSelectedClass] = useState('10');
@@ -60,22 +60,32 @@ export const ClassRoutineView = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Weekly Class Routine & Schedule Matrix
-          </h2>
-          <p className="text-xs text-slate-500">
-            6-day academic period matrix (Saturday to Thursday) with teacher allocations and lab assignments
-          </p>
-        </div>
+      <div className="rounded-[28px] border border-emerald-200 bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 p-6 text-white shadow-xl">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100">
+              <School className="h-3.5 w-3.5" />
+              Timetable overview
+            </div>
+            <h2 className="text-2xl font-black tracking-tight">Weekly Class Routine & Schedule Matrix</h2>
+            <p className="mt-2 max-w-2xl text-sm text-emerald-100/80">
+              6-day academic period matrix with teacher allocations, room assignments, and lab-based periods.
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2 text-xs">
+          <button className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-emerald-900">
+            <Sparkles className="h-4 w-4" />
+            Publish timetable
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center justify-end">
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-bold text-slate-900 dark:text-white focus:outline-none"
+            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           >
             <option value="10">Class 10 (Science) - Morning Shift</option>
             <option value="9">Class 9 (Science)</option>
@@ -84,45 +94,26 @@ export const ClassRoutineView = () => {
         </div>
       </div>
 
-      {/* Routine Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {days.map((day) => (
-          <div
-            key={day.key}
-            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm"
-          >
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-extrabold text-xs text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
-                {day.name}
-              </h3>
-              <span className="text-[10px] font-bold text-slate-400">
-                {routineMatrix[day.key]?.length || 0} Periods
-              </span>
+          <div key={day.key} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-700">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400">{day.name}</h3>
+              <span className="text-[10px] font-bold text-slate-400">{routineMatrix[day.key]?.length || 0} periods</span>
             </div>
 
             <div className="space-y-2.5">
               {routineMatrix[day.key]?.map((p, i) => (
-                <div
-                  key={i}
-                  className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs space-y-1 hover:border-emerald-300 transition-colors"
-                >
-                  <div className="flex justify-between items-center">
+                <div key={i} className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:border-slate-700 dark:bg-slate-800/60">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="font-bold text-slate-900 dark:text-white">{p.subject}</span>
-                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
-                      P{p.period}
-                    </span>
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">P{p.period}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-500">
-                    <span className="flex items-center gap-1 font-mono">
-                      <Clock className="w-3 h-3 text-slate-400" />
-                      {p.time}
-                    </span>
-                    <span className="flex items-center gap-1 font-medium">
-                      <MapPin className="w-3 h-3 text-slate-400" />
-                      {p.room}
-                    </span>
+                  <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
+                    <span className="flex items-center gap-1 font-mono"><Clock className="h-3 w-3" /> {p.time}</span>
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {p.room}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-semibold">{p.teacher}</p>
+                  <p className="mt-2 text-[10px] font-semibold text-slate-500">{p.teacher}</p>
                 </div>
               ))}
             </div>

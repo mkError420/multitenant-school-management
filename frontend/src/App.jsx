@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { AuthCtx } from './context/AuthContext';
 import { Login } from './pages/Login';
 
-// ── Super Admin ──────────────────────────────────────────
-import { SuperAdminDashboard }    from './pages/superadmin/SuperAdminDashboard';
+// ── Role-based dashboards ─────────────────────────────────
+import { SuperAdminDashboard }         from './pages/superadmin/SuperAdminDashboard';
+import { SuperAdminPlatformDashboard } from './pages/superadmin/SuperAdminPlatformDashboard';
+import { SchoolAdminDashboard }        from './pages/schooladmin/SchoolAdminDashboard';
 
 // ── School Admin – 10 Modules ────────────────────────────
 import { DashboardOverview }      from './pages/schooladmin/DashboardOverview';
@@ -51,7 +53,7 @@ const SUPER_MENU = [
       { id: 'school_admins', label: '👥 School Admin Profiles' },
       { id: 'plans', label: '💎 Subscription Plans' },
       { id: 'sms_gateway', label: '📱 SMS Gateway & Credits' },
-      { id: 'analytics', label: '� Platform Financials' },
+      { id: 'analytics', label: '💰 Platform Financials' },
       { id: 'system', label: '🛡️ System & Isolation' },
     ]
   }
@@ -121,9 +123,13 @@ export default function App() {
   const menu = role === 'super_admin' ? SUPER_MENU : SCHOOL_MENU;
 
   const renderPage = () => {
-    if (role === 'super_admin') return <SuperAdminDashboard />;
+    if (role === 'super_admin') {
+      return <SuperAdminDashboard />;
+    }
+
+    if (activeTab === 'dashboard') return <SchoolAdminDashboard />;
+
     switch (activeTab) {
-      case 'dashboard':  return <DashboardOverview />;
       case 'academic':   return <AcademicManagement />;
       case 'students':   return <StudentManagement />;
       case 'attendance': return <AttendanceLeaves />;
@@ -133,7 +139,7 @@ export default function App() {
       case 'sms':        return <CommunicationSMS />;
       case 'library':    return <LibraryTransport />;
       case 'settings':   return <SettingsCustomization />;
-      default:           return <DashboardOverview />;
+      default:           return <SchoolAdminDashboard />;
     }
   };
 
@@ -201,32 +207,6 @@ export default function App() {
 
           {/* Right controls */}
           <div className="flex items-center gap-2 shrink-0">
-            {role !== 'super_admin' && (
-              <select
-                value={tenant.id}
-                onChange={(e) => setTenant(DEMO_TENANTS.find(t => t.id === Number(e.target.value)))}
-                className="hidden lg:block text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200"
-              >
-                {DEMO_TENANTS.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-            )}
-
-            <select
-              value={role}
-              onChange={(e) => switchRole(e.target.value)}
-              className="text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-xl px-2.5 py-1.5"
-            >
-              <option value="school_admin">👑 Principal / Admin</option>
-              <option value="super_admin">⚡ Super Admin (SaaS)</option>
-              <option value="teacher">👨‍🏫 Teacher Portal</option>
-              <option value="accountant">💰 Accountant (POS)</option>
-              <option value="student">🎓 Student View</option>
-            </select>
-
-            <div className="hidden md:flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 px-3 py-1.5 rounded-full">
-              📱 SMS: {tenant.sms_balance}
-            </div>
-
             <button
               onClick={toggleDark}
               className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-base"

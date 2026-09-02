@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Badge, Modal } from '../../components/common/StatCard';
+import { Badge, Modal, StatCard } from '../../components/common/StatCard';
 import {
   Users,
   Wallet,
@@ -9,16 +9,17 @@ import {
   CheckCircle2,
   FileSpreadsheet,
   Plus,
-  Building
+  Building,
+  School,
+  Sparkles
 } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
 
 export const HRPayroll = () => {
   const { tenant } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('payroll'); // 'staff_directory' | 'payroll_setup' | 'payroll' | 'bank_sheet'
+  const [activeTab, setActiveTab] = useState('payroll');
   const [selectedPayslip, setSelectedPayslip] = useState(null);
 
-  // Staff Directory
   const [staffList, setStaffList] = useState([
     { id: 1, emp_id: 'EMP-1001', name: 'Prof. Kazi Faruq Ahmed', role: 'Principal', dept: 'Administration', phone: '+8801711111111', joining: '2015-01-10', basic: 85000.00, status: 'active' },
     { id: 2, emp_id: 'EMP-1002', name: 'Mohammad Rafiqul Islam', role: 'Senior Math Teacher', dept: 'Mathematics', phone: '+8801711222222', joining: '2018-03-15', basic: 52000.00, status: 'active' },
@@ -26,7 +27,6 @@ export const HRPayroll = () => {
     { id: 4, emp_id: 'EMP-1004', name: 'Md. Shahinur Rahman', role: 'Senior Accountant', dept: 'Accounts', phone: '+8801711444444', joining: '2019-02-01', basic: 38000.00, status: 'active' }
   ]);
 
-  // Salary Disbursements
   const staffPayroll = [
     { id: 1, name: 'Prof. Kazi Faruq Ahmed', designation: 'Principal', bank_account: 'DBBL: 115.105.99281', basic: 85000.00, house_rent: 20000.00, medical: 5000.00, conveyance: 5000.00, deduction: 2000.00, net_salary: 113000.00, status: 'paid' },
     { id: 2, name: 'Mohammad Rafiqul Islam', designation: 'Senior Math Teacher', bank_account: 'Sonali: 0291.884719', basic: 52000.00, house_rent: 12000.00, medical: 3000.00, conveyance: 2000.00, deduction: 1000.00, net_salary: 68000.00, status: 'paid' },
@@ -36,34 +36,40 @@ export const HRPayroll = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Human Resources (HR), Faculty & Payroll
-          </h2>
-          <p className="text-xs text-slate-500">
-            Faculty directory, salary structures, monthly disbursements, payslip generation, and bank export sheets
-          </p>
-        </div>
+      <div className="rounded-[28px] border border-violet-200 bg-gradient-to-r from-violet-900 via-purple-900 to-indigo-900 p-6 text-white shadow-xl">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-100">
+              <School className="h-3.5 w-3.5" />
+              HR dashboard
+            </div>
+            <h2 className="text-2xl font-black tracking-tight">Human Resources (HR), Faculty & Payroll</h2>
+            <p className="mt-2 max-w-2xl text-sm text-violet-100/80">Faculty directory, salary structures, monthly disbursements, payslip generation, and bank export sheets.</p>
+          </div>
 
-        {/* Subtabs */}
-        <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold">
+          <button className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-violet-900">
+            <Sparkles className="h-4 w-4" />
+            Process payroll
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Total payroll" value="৳ 294,000" icon={Wallet} color="emerald" subtext="March disbursement" />
+        <StatCard title="Staff members" value="4" icon={Users} color="blue" subtext="Faculty roster" />
+        <StatCard title="Bank transfer" value="4" icon={Building} color="violet" subtext="Accounts exported" />
+        <StatCard title="Payslips" value="Generated" icon={FileSpreadsheet} color="amber" subtext="Ready to print" />
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap gap-2">
           {[
             { id: 'payroll', label: '💰 Salary Disbursement' },
             { id: 'staff_directory', label: '👥 Staff Directory' },
             { id: 'payroll_setup', label: '⚙️ Payroll Setup' },
             { id: 'bank_sheet', label: '🏦 Bank Transfer Sheet' }
           ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                activeTab === tab.id
-                  ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-xl px-3 py-2 text-xs font-bold transition ${activeTab === tab.id ? 'bg-violet-600 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}`}>
               {tab.label}
             </button>
           ))}

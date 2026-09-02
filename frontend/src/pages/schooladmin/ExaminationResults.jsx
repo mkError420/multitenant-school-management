@@ -1,69 +1,91 @@
 import React, { useState } from 'react';
-import { Badge, Modal } from '../../components/common/StatCard';
+import { Badge } from '../../components/common/StatCard';
 import { TabulationSheetView } from '../../components/printables/TabulationSheetView';
 import { AdmitCardModal } from '../../components/printables/PrintableModals';
 import {
-  GraduationCap,
-  FileSpreadsheet,
-  Printer,
   Award,
-  Calendar,
-  CheckCircle2,
-  Contact2,
-  FileText,
-  Sliders
+  BookOpen,
+  FileSpreadsheet,
+  GraduationCap,
+  School,
+  Sparkles,
+  Trophy,
 } from 'lucide-react';
 
 export const ExaminationResults = () => {
-  const [activeTab, setActiveTab] = useState('tabulation'); // 'setup' | 'marks_entry' | 'grading' | 'tabulation' | 'admit_cards'
-  const [selectedExam, setSelectedExam] = useState('1');
+  const [activeTab, setActiveTab] = useState('tabulation');
   const [isAdmitCardOpen, setIsAdmitCardOpen] = useState(false);
 
-  // Exam Setup List
-  const [examTerms, setExamTerms] = useState([
-    { id: 1, name: 'Half-Yearly Examination 2026', start_date: '2026-06-10', end_date: '2026-06-25', status: 'published', cq_weight: '70%', mcq_weight: '30%', sba: 'Continuous Assessment' },
-    { id: 2, name: 'Pre-Test / Model Test Examination 2026', start_date: '2026-09-15', end_date: '2026-09-30', status: 'draft', cq_weight: '70%', mcq_weight: '30%', sba: 'SBA Applicable' },
-    { id: 3, name: 'Annual Examination 2026', start_date: '2026-11-15', end_date: '2026-11-30', status: 'draft', cq_weight: '70%', mcq_weight: '30%', sba: 'Final Evaluation' }
+  const [examTerms] = useState([
+    { id: 1, name: 'Half-Yearly 2026', start_date: '2026-06-10', end_date: '2026-06-25', status: 'published', cq_weight: '70%', mcq_weight: '30%', sba: 'Continuous Assessment' },
+    { id: 2, name: 'Pre-Test 2026', start_date: '2026-09-15', end_date: '2026-09-30', status: 'draft', cq_weight: '70%', mcq_weight: '30%', sba: 'SBA Applicable' },
+    { id: 3, name: 'Annual 2026', start_date: '2026-11-15', end_date: '2026-11-30', status: 'draft', cq_weight: '70%', mcq_weight: '30%', sba: 'Final Evaluation' }
   ]);
 
-  // Marks Entry Matrix for Teacher
-  const [marksData, setMarksData] = useState([
-    { roll: 1, name: 'Tanvir Hasan', cq: 62, mcq: 26, pr: 0, ca: 0, total: 88, gpa: '5.00', grade: 'A+' },
-    { roll: 2, name: 'Sadia Afrin', cq: 58, mcq: 24, pr: 0, ca: 0, total: 82, gpa: '5.00', grade: 'A+' },
-    { roll: 3, name: 'Arafat Rahman', cq: 45, mcq: 20, pr: 0, ca: 0, total: 65, gpa: '3.50', grade: 'A-' },
-    { roll: 4, name: 'Farzana Akter', cq: 52, mcq: 22, pr: 0, ca: 0, total: 74, gpa: '4.00', grade: 'A' }
-  ]);
+  const marksData = [
+    { roll: 1, name: 'Tanvir Hasan', cq: 62, mcq: 26, total: 88, gpa: '5.00', grade: 'A+' },
+    { roll: 2, name: 'Sadia Afrin', cq: 58, mcq: 24, total: 82, gpa: '5.00', grade: 'A+' },
+    { roll: 3, name: 'Arafat Rahman', cq: 45, mcq: 20, total: 65, gpa: '3.50', grade: 'A-' },
+    { roll: 4, name: 'Farzana Akter', cq: 52, mcq: 22, total: 74, gpa: '4.00', grade: 'A' }
+  ];
+
+  const tabs = [
+    { id: 'tabulation', label: 'Tabulation' },
+    { id: 'marks_entry', label: 'Marks entry' },
+    { id: 'setup', label: 'Exam setup' },
+    { id: 'grading', label: 'Grading' },
+    { id: 'admit_cards', label: 'Admit cards' }
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Examination, GPA 5.0 Tabulation & Marksheets
-          </h2>
-          <p className="text-xs text-slate-500">
-            NCTB mark distribution, teacher marks entry, GPA 5.0 rule customizer, tabulation sheets, and admit cards
-          </p>
-        </div>
+      <div className="rounded-[28px] border border-violet-200 bg-gradient-to-r from-violet-900 via-indigo-900 to-slate-900 p-6 text-white shadow-xl">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-100">
+              <School className="h-3.5 w-3.5" />
+              Exam management
+            </div>
+            <h2 className="text-2xl font-black tracking-tight">Examination & results</h2>
+            <p className="mt-2 max-w-2xl text-sm text-violet-100/80">
+              Marks entry, tabulation, GPA grading, and admit card generation across all test cycles.
+            </p>
+          </div>
 
-        {/* Subtabs */}
-        <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold">
-          {[
-            { id: 'tabulation', label: '📊 Tabulation & Marksheets' },
-            { id: 'marks_entry', label: '✍️ Marks Entry Portal' },
-            { id: 'setup', label: '⚙️ Exam Setup & Weightage' },
-            { id: 'grading', label: '🏆 Grading Scale (5.0)' },
-            { id: 'admit_cards', label: '🎫 Admit Card Generator' }
-          ].map((tab) => (
+          <button onClick={() => setIsAdmitCardOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-violet-900">
+            <Award className="h-4 w-4" />
+            Admit cards
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { title: 'Open exam', value: 'Half-yearly', icon: BookOpen, tone: 'emerald', note: 'Published' },
+          { title: 'Students scored', value: '1,250', icon: FileSpreadsheet, tone: 'blue', note: 'Class entries' },
+          { title: 'Top GPA', value: '5.00', icon: Trophy, tone: 'violet', note: 'High achievers' },
+          { title: 'Grade system', value: 'A+ to F', icon: GraduationCap, tone: 'amber', note: 'NCTB policy' }
+        ].map(({ title, value, icon: Icon, tone, note }) => (
+          <div key={title} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{title}</p>
+              <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${tone === 'emerald' ? 'bg-emerald-100 text-emerald-600' : tone === 'blue' ? 'bg-sky-100 text-sky-600' : tone === 'violet' ? 'bg-violet-100 text-violet-600' : 'bg-amber-100 text-amber-600'}`}>
+                <Icon className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="mt-5 text-2xl font-black text-slate-900 dark:text-white">{value}</p>
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{note}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                activeTab === tab.id
-                  ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
+              className={`rounded-xl px-3 py-2 text-xs font-bold transition ${activeTab === tab.id ? 'bg-violet-600 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}`}
             >
               {tab.label}
             </button>
@@ -71,74 +93,70 @@ export const ExaminationResults = () => {
         </div>
       </div>
 
-      {/* 1. TABULATION & MARKSHEETS SUBTAB */}
-      {activeTab === 'tabulation' && (
-        <TabulationSheetView />
-      )}
+      {activeTab === 'tabulation' && <TabulationSheetView />}
 
-      {/* 2. MARKS ENTRY SUBTAB */}
       {activeTab === 'marks_entry' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="font-extrabold text-sm">Marks Entry Portal: Bangla 1st Paper (Code: 101)</h3>
-              <p className="text-xs text-slate-500">Class 10 (Science) • Half-Yearly Exam 2026 • Full Marks: 100</p>
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Marks entry</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Bangla 1st Paper • Class 10 • Half-yearly 2026</p>
             </div>
-            <button onClick={() => alert('Marks saved and synchronized to tabulation engine!')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow">
-              Save & Synchronize Marks
-            </button>
+            <button className="rounded-xl bg-emerald-600 px-3.5 py-2 text-[10px] font-bold text-white">Save marks</button>
           </div>
 
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800 font-bold uppercase text-[10px] border-b">
-              <tr>
-                <th className="p-3">Roll</th>
-                <th className="p-3">Student Name</th>
-                <th className="p-3">Creative CQ (70)</th>
-                <th className="p-3">MCQ (30)</th>
-                <th className="p-3">Total (100)</th>
-                <th className="p-3">Grade Point</th>
-                <th className="p-3">Grade</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y font-medium">
-              {marksData.map((m, idx) => (
-                <tr key={idx}>
-                  <td className="p-3 font-bold">{m.roll}</td>
-                  <td className="p-3 font-bold">{m.name}</td>
-                  <td className="p-3"><input defaultValue={m.cq} className="w-16 p-1 border rounded bg-slate-50 dark:bg-slate-800 font-bold" /></td>
-                  <td className="p-3"><input defaultValue={m.mcq} className="w-16 p-1 border rounded bg-slate-50 dark:bg-slate-800 font-bold" /></td>
-                  <td className="p-3 font-bold text-slate-900 dark:text-white">{m.total}</td>
-                  <td className="p-3 font-black text-emerald-600">{m.gpa}</td>
-                  <td className="p-3"><Badge variant="success">{m.grade}</Badge></td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-xs">
+              <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <tr>
+                  <th className="px-3 py-3">Roll</th>
+                  <th className="px-3 py-3">Student</th>
+                  <th className="px-3 py-3">CQ</th>
+                  <th className="px-3 py-3">MCQ</th>
+                  <th className="px-3 py-3">Total</th>
+                  <th className="px-3 py-3">GPA</th>
+                  <th className="px-3 py-3">Grade</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                {marksData.map((row) => (
+                  <tr key={row.roll} className="bg-white dark:bg-slate-900">
+                    <td className="px-3 py-3 font-bold text-slate-900 dark:text-white">{row.roll}</td>
+                    <td className="px-3 py-3 font-bold text-slate-900 dark:text-white">{row.name}</td>
+                    <td className="px-3 py-3"><input defaultValue={row.cq} className="w-16 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-center font-bold dark:border-slate-700 dark:bg-slate-800" /></td>
+                    <td className="px-3 py-3"><input defaultValue={row.mcq} className="w-16 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-center font-bold dark:border-slate-700 dark:bg-slate-800" /></td>
+                    <td className="px-3 py-3 font-bold text-slate-900 dark:text-white">{row.total}</td>
+                    <td className="px-3 py-3 text-emerald-600 font-black">{row.gpa}</td>
+                    <td className="px-3 py-3"><Badge variant="success">{row.grade}</Badge></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* 3. EXAM SETUP SUBTAB */}
       {activeTab === 'setup' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b">
-            <h3 className="font-extrabold text-sm">Exam Terms & Mark Distribution Weightage</h3>
-            <button onClick={() => alert('New Exam creation modal')} className="px-3.5 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow">
-              + Create Exam Term
-            </button>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Exam setup</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Mark distribution and public exam calendar</p>
+            </div>
+            <button className="rounded-xl bg-violet-600 px-3.5 py-2 text-[10px] font-bold text-white">+ New exam</button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div className="grid gap-4 md:grid-cols-3">
             {examTerms.map((term) => (
-              <div key={term.id} className="p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border space-y-3">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-extrabold text-slate-900 dark:text-white">{term.name}</h4>
-                  <Badge variant={term.status === 'published' ? 'success' : 'default'}>{term.status.toUpperCase()}</Badge>
+              <div key={term.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-black text-slate-900 dark:text-white">{term.name}</p>
+                  <Badge variant={term.status === 'published' ? 'success' : 'default'}>{term.status}</Badge>
                 </div>
-                <p className="text-slate-500">Dates: {term.start_date} to {term.end_date}</p>
-                <div className="pt-2 border-t text-[11px] space-y-1 text-slate-600 dark:text-slate-300">
-                  <p>CQ Weight: <strong>{term.cq_weight}</strong> • MCQ: <strong>{term.mcq_weight}</strong></p>
-                  <p>SBA / Continuous: <strong>{term.sba}</strong></p>
+                <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">{term.start_date} to {term.end_date}</p>
+                <div className="mt-4 space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                  <p>CQ: <span className="font-bold">{term.cq_weight}</span> • MCQ: <span className="font-bold">{term.mcq_weight}</span></p>
+                  <p>SBA: <span className="font-bold">{term.sba}</span></p>
                 </div>
               </div>
             ))}
@@ -146,76 +164,65 @@ export const ExaminationResults = () => {
         </div>
       )}
 
-      {/* 4. GRADING RULES SUBTAB */}
       {activeTab === 'grading' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b">
-            <div>
-              <h3 className="font-extrabold text-sm">Bangladesh NCTB GPA 5.0 Standard Grading Rules</h3>
-              <p className="text-xs text-slate-500">Includes 4th Subject Bonus Rule: Points above 2.0 GPA added to total score</p>
-            </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4">
+            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">GPA 5.0 grading scale</h3>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Bangladesh NCTB standard mapping</p>
           </div>
 
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800 font-bold uppercase text-[10px] border-b">
-              <tr>
-                <th className="p-3">Letter Grade</th>
-                <th className="p-3">Marks Range</th>
-                <th className="p-3">Grade Point (GP)</th>
-                <th className="p-3">Remarks / Performance</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y font-medium">
-              {[
-                { grade: 'A+', range: '80% - 100%', gp: '5.00', remarks: 'Outstanding / Golden Grade' },
-                { grade: 'A',  range: '70% - 79%',  gp: '4.00', remarks: 'Excellent' },
-                { grade: 'A-', range: '60% - 69%',  gp: '3.50', remarks: 'Very Good' },
-                { grade: 'B',  range: '50% - 59%',  gp: '3.00', remarks: 'Good' },
-                { grade: 'C',  range: '40% - 49%',  gp: '2.00', remarks: 'Satisfactory / Passing' },
-                { grade: 'D',  range: '33% - 39%',  gp: '1.00', remarks: 'Minimum Passing' },
-                { grade: 'F',  range: '0% - 32%',   gp: '0.00', remarks: 'Failed (Compulsory Retake)' }
-              ].map((g, idx) => (
-                <tr key={idx}>
-                  <td className="p-3 font-extrabold text-emerald-600 text-sm">{g.grade}</td>
-                  <td className="p-3">{g.range}</td>
-                  <td className="p-3 font-bold">{g.gp}</td>
-                  <td className="p-3 text-slate-600 dark:text-slate-300">{g.remarks}</td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-xs">
+              <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <tr>
+                  <th className="px-3 py-3">Grade</th>
+                  <th className="px-3 py-3">Mark range</th>
+                  <th className="px-3 py-3">GP</th>
+                  <th className="px-3 py-3">Remark</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                {[
+                  ['A+', '80-100', '5.00', 'Outstanding'],
+                  ['A', '70-79', '4.00', 'Excellent'],
+                  ['A-', '60-69', '3.50', 'Very good'],
+                  ['B', '50-59', '3.00', 'Good'],
+                  ['C', '40-49', '2.00', 'Satisfactory'],
+                  ['D', '33-39', '1.00', 'Passing'],
+                  ['F', '0-32', '0.00', 'Failed']
+                ].map(([grade, range, gp, remark]) => (
+                  <tr key={grade} className="bg-white dark:bg-slate-900">
+                    <td className="px-3 py-3 font-black text-emerald-600">{grade}</td>
+                    <td className="px-3 py-3 text-slate-600 dark:text-slate-300">{range}</td>
+                    <td className="px-3 py-3 font-bold text-slate-900 dark:text-white">{gp}</td>
+                    <td className="px-3 py-3 text-slate-600 dark:text-slate-300">{remark}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* 5. ADMIT CARDS SUBTAB */}
       {activeTab === 'admit_cards' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="font-extrabold text-sm">Exam Admit Card Generator (A4 Print Ready)</h3>
-              <p className="text-xs text-slate-500">Generates official candidate admit card with full examination timetable</p>
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Admit cards</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Print-ready candidate documents</p>
             </div>
-            <button onClick={() => setIsAdmitCardOpen(true)} className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow">
-              🎫 Launch Candidate Admit Card
-            </button>
+            <button onClick={() => setIsAdmitCardOpen(true)} className="rounded-xl bg-indigo-600 px-3.5 py-2 text-[10px] font-bold text-white">Open sample</button>
           </div>
 
-          <div className="p-6 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border text-center space-y-2 text-xs">
-            <Award className="w-10 h-10 text-indigo-500 mx-auto" />
-            <h4 className="font-bold text-sm">Admit Cards Ready for 1,250 Candidates</h4>
-            <p className="text-slate-500 max-w-md mx-auto">
-              Students who have cleared tuition dues can collect their official signed admit cards.
-            </p>
+          <div className="rounded-2xl border border-dashed border-violet-300 bg-violet-50 p-6 text-center dark:border-violet-800 dark:bg-violet-950/20">
+            <Award className="mx-auto h-12 w-12 text-violet-600" />
+            <p className="mt-4 text-lg font-black text-slate-900 dark:text-white">Admit cards ready for 1,250 students</p>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Official documents can be printed and distributed after due verification.</p>
           </div>
         </div>
       )}
 
-      {/* Admit Card Modal */}
-      <AdmitCardModal
-        isOpen={isAdmitCardOpen}
-        onClose={() => setIsAdmitCardOpen(false)}
-        studentId={1}
-      />
+      <AdmitCardModal isOpen={isAdmitCardOpen} onClose={() => setIsAdmitCardOpen(false)} studentId={1} />
     </div>
   );
 };

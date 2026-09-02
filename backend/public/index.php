@@ -83,6 +83,11 @@ $router->group('/api/superadmin', [CorsMiddleware::class], function (Router $r) 
     $r->get('/analytics', [SuperAdminController::class, 'getAnalytics']);
     $r->get('/tenants', [SuperAdminController::class, 'getTenants']);
     $r->post('/tenants', [SuperAdminController::class, 'createTenant']);
+    $r->get('/school-admins', [SuperAdminController::class, 'getSchoolAdmins']);
+    $r->post('/school-admins', [SuperAdminController::class, 'createSchoolAdmin']);
+    $r->put('/school-admins', [SuperAdminController::class, 'updateSchoolAdmin']);
+    $r->delete('/school-admins', [SuperAdminController::class, 'deleteSchoolAdmin']);
+    $r->patch('/school-admins/toggle', [SuperAdminController::class, 'toggleSchoolAdminStatus']);
 });
 
 // ----------------------------------------------------------------------------

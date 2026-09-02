@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Badge, Modal } from '../../components/common/StatCard';
+import { Badge, Modal, StatCard } from '../../components/common/StatCard';
 import {
   CalendarCheck,
   Send,
@@ -10,7 +10,8 @@ import {
   Sparkles,
   Search,
   MessageSquare,
-  Users
+  Users,
+  School
 } from 'lucide-react';
 import { useAuthStore } from '../../services/authStore';
 
@@ -29,7 +30,7 @@ export const AttendanceMatrix = () => {
       name: 'Tanvir Hasan',
       photo_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
       guardian_phone: '+8801711888001',
-      status: 'present', // present | absent | late
+      status: 'present',
       in_time: '07:42 AM',
       remarks: ''
     },
@@ -118,146 +119,166 @@ export const AttendanceMatrix = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Daily Attendance & Absent Alert System
-          </h2>
-          <p className="text-xs text-slate-500">
-            Real-time classroom roll call and instant Bengali SMS dispatch to absent guardians
-          </p>
-        </div>
+      <div className="rounded-[28px] border border-emerald-200 bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 p-6 text-white shadow-xl">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100">
+              <School className="h-3.5 w-3.5" />
+              Attendance control
+            </div>
+            <h2 className="text-2xl font-black tracking-tight">Daily Attendance & Absent Alert System</h2>
+            <p className="mt-2 max-w-2xl text-sm text-emerald-100/80">
+              Real-time classroom roll call and instant Bengali SMS dispatch to absent guardians.
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2">
           {absentCount > 0 && (
             <button
               onClick={() => setIsSMSModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/20 transition-all animate-pulse"
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-rose-500/20"
             >
-              <Send className="w-4 h-4" />
-              <span>Send Absent Alert SMS ({absentCount})</span>
+              <Send className="h-4 w-4" />
+              Send absent SMS ({absentCount})
             </button>
           )}
         </div>
       </div>
 
-      {/* Filter and Quick Stats Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Controls */}
-        <div className="md:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-wrap items-center gap-3">
-          <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Date</label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
-            />
-          </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-wrap items-center gap-3">
+            <div>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Date</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
 
-          <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Class</label>
-            <select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
-            >
-              <option value="6">Class 6</option>
-              <option value="7">Class 7</option>
-              <option value="8">Class 8</option>
-              <option value="9">Class 9</option>
-              <option value="10">Class 10 (SSC)</option>
-              <option value="11">Class 11 (HSC)</option>
-            </select>
-          </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Class</label>
+              <select
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              >
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10">Class 10 (SSC)</option>
+                <option value="11">Class 11 (HSC)</option>
+              </select>
+            </div>
 
-          <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Section</label>
-            <select
-              value={selectedSection}
-              onChange={(e) => setSelectedSection(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
-            >
-              <option value="padma">Padma (Morning)</option>
-              <option value="meghna">Meghna (Day)</option>
-              <option value="jamuna">Jamuna (Science)</option>
-            </select>
+            <div>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Section</label>
+              <select
+                value={selectedSection}
+                onChange={(e) => setSelectedSection(e.target.value)}
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              >
+                <option value="padma">Padma (Morning)</option>
+                <option value="meghna">Meghna (Day)</option>
+                <option value="jamuna">Jamuna (Science)</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Attendance Summary Widgets */}
-        <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase">
-              Present Rate
-            </p>
-            <h3 className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-0.5">
-              {attendanceRate}%
-            </h3>
-            <p className="text-[10px] text-emerald-600 dark:text-emerald-400">
-              {presentCount} Present • {lateCount} Late
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-emerald-600 text-white font-bold">
-            <Check className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-bold text-rose-800 dark:text-rose-300 uppercase">
-              Absent Count
-            </p>
-            <h3 className="text-2xl font-black text-rose-700 dark:text-rose-400 mt-0.5">
-              {absentCount} Students
-            </h3>
-            <p className="text-[10px] text-rose-600 dark:text-rose-400">
-              Auto SMS ready for dispatch
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-rose-600 text-white font-bold">
-            <AlertCircle className="w-5 h-5" />
-          </div>
-        </div>
+        <StatCard title="Present rate" value={`${attendanceRate}%`} icon={Check} color="emerald" subtext={`${presentCount} present • ${lateCount} late`} />
+        <StatCard title="Absent count" value={`${absentCount}`} icon={AlertCircle} color="rose" subtext="Recipients ready" />
       </div>
 
-      {/* Attendance Matrix Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-        {/* Table header bar with Quick Mark All */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/40">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col justify-between gap-3 border-b border-slate-200 bg-slate-50/60 p-4 sm:flex-row sm:items-center dark:border-slate-800 dark:bg-slate-800/40">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
-              Class 10 (Padma) Roll Call Matrix
-            </h3>
-            <Badge variant="info">{records.length} Students</Badge>
+            <h3 className="text-xs font-black uppercase tracking-[0.18em] text-slate-900 dark:text-white">Class 10 (Padma) roll call matrix</h3>
+            <Badge variant="info">{records.length} students</Badge>
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-400 text-[11px] font-medium">Quick Mark:</span>
-            <button
-              onClick={() => markAll('present')}
-              className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold hover:bg-emerald-200 transition-colors"
-            >
-              All Present
-            </button>
-            <button
-              onClick={() => markAll('absent')}
-              className="px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-bold hover:bg-rose-200 transition-colors"
-            >
-              All Absent
-            </button>
+            <span className="text-slate-400">Quick mark:</span>
+            <button onClick={() => markAll('present')} className="rounded-lg bg-emerald-100 px-2.5 py-1 font-bold text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">All Present</button>
+            <button onClick={() => markAll('absent')} className="rounded-lg bg-rose-100 px-2.5 py-1 font-bold text-rose-800 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300">All Absent</button>
           </div>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
               <tr>
                 <th className="py-3 px-4">Roll</th>
-                <th className="py-3 px-4">Student Profile</th>
-                <th className="py-3 px-4">Guardian Phone</th>
+                <th className="py-3 px-4">Student profile</th>
+                <th className="py-3 px-4">Guardian phone</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">In time</th>
+                <th className="py-3 px-4">Remarks</th>
+                <th className="py-3 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              {records.map((r) => (
+                <tr key={r.id} className="bg-white dark:bg-slate-900">
+                  <td className="px-4 py-3 font-black text-slate-900 dark:text-white">{r.roll_no}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <img src={r.photo_url} alt={r.name} className="h-9 w-9 rounded-xl object-cover ring-2 ring-emerald-500/20" />
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-white">{r.name}</p>
+                        <p className="text-[10px] text-slate-500">Class {selectedClass}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 font-mono text-emerald-600">{r.guardian_phone}</td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={r.status}
+                      onChange={(e) => updateStatus(r.id, e.target.value)}
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold text-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    >
+                      <option value="present">Present</option>
+                      <option value="late">Late</option>
+                      <option value="absent">Absent</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 font-mono text-slate-700 dark:text-slate-200">{r.in_time || '—'}</td>
+                  <td className="px-4 py-3 text-slate-500">{r.remarks || '—'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"> <Clock className="h-3 w-3" /> Log</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <Modal isOpen={isSMSModalOpen} onClose={() => setIsSMSModalOpen(false)} title="📱 Dispatch absent alert SMS">
+        <div className="space-y-4 text-xs">
+          <p className="text-slate-600 dark:text-slate-300">Send SMS to {absentStudents.length} absent guardian(s) using the current gateway configuration.</p>
+          <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
+            <p className="font-bold text-slate-900 dark:text-white">Recipients</p>
+            <div className="mt-2 space-y-1">
+              {absentStudents.slice(0, 3).map((student) => (
+                <div key={student.id} className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                  <span>{student.name}</span>
+                  <span className="font-mono">{student.guardian_phone}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={() => setIsSMSModalOpen(false)} className="rounded-xl bg-slate-100 px-3 py-2 font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">Cancel</button>
+            <button type="button" onClick={handleSendAbsentSMS} className="rounded-xl bg-rose-600 px-3 py-2 font-bold text-white shadow-lg shadow-rose-600/20" disabled={smsSending}>{smsSending ? 'Sending...' : 'Send SMS'}</button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+};
                 <th className="py-3 px-4">In-Time</th>
                 <th className="py-3 px-4">Attendance Status</th>
                 <th className="py-3 px-4">Remarks / Reason</th>

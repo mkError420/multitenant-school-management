@@ -36,6 +36,10 @@ class Router {
         $this->addRoute('DELETE', $path, $handler, $middlewares);
     }
 
+    public function patch(string $path, $handler, array $middlewares = []): void {
+        $this->addRoute('PATCH', $path, $handler, $middlewares);
+    }
+
     public function options(string $path, $handler): void {
         $this->addRoute('OPTIONS', $path, $handler, []);
     }
