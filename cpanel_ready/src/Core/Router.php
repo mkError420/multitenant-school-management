@@ -36,6 +36,10 @@ class Router {
         $this->addRoute('DELETE', $path, $handler, $middlewares);
     }
 
+    public function patch(string $path, $handler, array $middlewares = []): void {
+        $this->addRoute('PATCH', $path, $handler, $middlewares);
+    }
+
     public function options(string $path, $handler): void {
         $this->addRoute('OPTIONS', $path, $handler, []);
     }
@@ -61,8 +65,9 @@ class Router {
         if ($requestMethod === 'OPTIONS') {
             Response::json(['status' => 'ok'], 200, [
                 'Access-Control-Allow-Origin'  => '*',
-                'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers' => 'Content-Type, Authorization, X-Tenant-ID, X-Tenant-Subdomain'
+                'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Content-Type, Authorization, X-Tenant-ID, X-Tenant-Subdomain, X-Requested-With, Accept',
+                'Access-Control-Allow-Credentials' => 'true'
             ]);
             return;
         }
